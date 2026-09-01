@@ -4,8 +4,8 @@ import "testing"
 
 func trabajoDemo() Trabajo {
 	return Trabajo{
-		Slug:  "tesis",
-		Ruta:  "/tmp/tesis",
+		Slug: "tesis",
+		Ruta: "/tmp/tesis",
 		Entregables: []Entregable{
 			{Ruta: "salida/tesis.docx", Tipo: "docx", Minimo: 40},
 		},
@@ -35,7 +35,7 @@ func TestTrabajoNoListoSiFaltaEntregable(t *testing.T) {
 
 func TestTrabajoNoListoConAfirmacionSinRespaldo(t *testing.T) {
 	inf := trabajoDemo().Evaluar(EstadoEntrega{
-		Producidos:  map[string]int{"salida/tesis.docx": 45},
+		Producidos:   map[string]int{"salida/tesis.docx": 45},
 		Afirmaciones: []Afirmacion{{ID: "a1", Texto: "El 87% falla."}},
 	})
 	if inf.Listo() {

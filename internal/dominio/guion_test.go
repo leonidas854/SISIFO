@@ -31,7 +31,7 @@ func TestGuionValidaBloques(t *testing.T) {
 // exactamente el error que produce una bibliografía inventada.
 func TestGuionRechazaCitaFueraDeLaBibliografia(t *testing.T) {
 	g := Guion{
-		Tipo:  "docx",
+		Tipo:   "docx",
 		Titulo: "T",
 		Bloques: []Bloque{
 			{Clase: Parrafo, Texto: "Algo", Citas: []string{"existe"}},

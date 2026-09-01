@@ -1,0 +1,8 @@
+{
+  "name": "sisifo-generadores",
+  "private": true,
+  "description": "Generadores de entregables que necesitan Node (PPTX con gráficos nativos)",
+  "dependencies": {
+    "pptxgenjs": "^4.0.1"
+  }
+}

@@ -55,6 +55,44 @@ func TestRegistroDetectaCarpetaBorrada(t *testing.T) {
 	}
 }
 
+func TestSISIFOHomeTienePrioridadSobreNombreLegado(t *testing.T) {
+	sisifo := motorFalso(t, "sisifo")
+	taller := motorFalso(t, "taller")
+	t.Setenv("SISIFO_HOME", sisifo)
+	t.Setenv("TALLER_HOME", taller)
+
+	configuracion, err := ResolverConfiguracion()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if configuracion.Motor != sisifo || configuracion.Fuente != "SISIFO_HOME" {
+		t.Fatalf("SISIFO_HOME debe ganar: %+v", configuracion)
+	}
+}
+
+func TestTallerHomeSigueFuncionandoComoLegado(t *testing.T) {
+	taller := motorFalso(t, "taller")
+	t.Setenv("SISIFO_HOME", "")
+	t.Setenv("TALLER_HOME", taller)
+
+	configuracion, err := ResolverConfiguracion()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if configuracion.Motor != taller || configuracion.Fuente != "TALLER_HOME" {
+		t.Fatalf("TALLER_HOME dejó de funcionar: %+v", configuracion)
+	}
+}
+
+func motorFalso(t *testing.T, nombre string) string {
+	t.Helper()
+	ruta := filepath.Join(t.TempDir(), nombre)
+	if err := os.MkdirAll(filepath.Join(ruta, "py", "dockit"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	return ruta
+}
+
 func mustEval(t *testing.T, p string) string {
 	t.Helper()
 	e, err := filepath.EvalSymlinks(p)

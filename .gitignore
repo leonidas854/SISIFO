@@ -1,6 +1,8 @@
 # ── artefactos de compilación e instalación ──────────────────────────────
 bin/
 .venv/
+node_modules/
+package-lock.json
 *.exe
 
 # ── Python ───────────────────────────────────────────────────────────────
@@ -19,6 +21,12 @@ vendor/
 # ── estado local, no del proyecto ────────────────────────────────────────
 trabajos.json          # el registro de trabajos es de esta máquina
 *.gob                  # índices semánticos: se reconstruyen con 'sisifo indexar'
+
+# ── los trabajos nunca se publican ───────────────────────────────────────
+# El contenido de las entregas es del usuario: no entra en GitHub aunque
+# alguien cree una carpeta de trabajo dentro del repo por error.
+trabajos/
+BRIEF.md
 
 # ── datos de trabajos concretos ──────────────────────────────────────────
 # El motor no versiona el contenido de las entregas: eso vive en la carpeta

@@ -9,42 +9,6 @@ import (
 	"time"
 )
 
-// Motor devuelve la raíz de la instalación (donde viven py/, plantillas/).
-// Orden: TALLER_HOME, junto al binario, ~/.taller.
-func Motor() (string, error) {
-	if v := os.Getenv("TALLER_HOME"); v != "" {
-		if ok(v) {
-			return v, nil
-		}
-	}
-	if exe, err := os.Executable(); err == nil {
-		if r, err := filepath.EvalSymlinks(exe); err == nil {
-			exe = r
-		}
-		// bin/sisifo -> raíz está un nivel arriba
-		for _, c := range []string{
-			filepath.Dir(filepath.Dir(exe)),
-			filepath.Dir(exe),
-		} {
-			if ok(c) {
-				return c, nil
-			}
-		}
-	}
-	if h, err := os.UserHomeDir(); err == nil {
-		c := filepath.Join(h, ".taller")
-		if ok(c) {
-			return c, nil
-		}
-	}
-	return "", errors.New("no encuentro la instalación del taller; define TALLER_HOME")
-}
-
-func ok(dir string) bool {
-	_, err := os.Stat(filepath.Join(dir, "py", "dockit"))
-	return err == nil
-}
-
 // Python devuelve el intérprete del motor, o python3 si no hay venv.
 func Python(motor string) string {
 	v := filepath.Join(motor, ".venv", "bin", "python")

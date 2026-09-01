@@ -26,12 +26,20 @@ fi
 "$RAIZ/.venv/bin/pip" install -q citeproc-py citeproc-py-styles requests pyyaml pytest
 echo "  intérprete listo"
 
-# ── 3. binario Go ────────────────────────────────────────────────────────
+# ── 3. dependencias de Node (PPTX con gráficos nativos) ──────────────────
+if command -v npm >/dev/null; then
+  ( cd "$RAIZ" && npm install --silent --no-audit --no-fund )
+  echo "  pptxgenjs listo (gráficos y notas nativas en PPTX)"
+else
+  echo "  npm no está: el PPTX se generará con python-pptx (sin gráficos nativos)"
+fi
+
+# ── 4. binario Go ────────────────────────────────────────────────────────
 mkdir -p "$RAIZ/bin"
 ( cd "$RAIZ" && go build -o bin/sisifo ./cmd/sisifo )
 echo "  binario compilado: bin/sisifo"
 
-# ── 4. el comando, disponible desde cualquier carpeta ────────────────────
+# ── 5. el comando, disponible desde cualquier carpeta ────────────────────
 mkdir -p "$BIN_USUARIO"
 ln -sf "$RAIZ/bin/sisifo" "$BIN_USUARIO/sisifo"
 ln -sf "$RAIZ/bin/sisifo" "$BIN_USUARIO/taller"   # alias del nombre anterior
@@ -41,7 +49,7 @@ case ":$PATH:" in
   *) echo "  AVISO: $BIN_USUARIO no está en el PATH; añádelo a ~/.zshrc" ;;
 esac
 
-# ── 5. skills a nivel de usuario: valen en todos los proyectos ───────────
+# ── 6. skills a nivel de usuario: valen en todos los proyectos ───────────
 mkdir -p "$SKILLS_USUARIO"
 for s in "$RAIZ"/skills/*/; do
   nombre="$(basename "$s")"

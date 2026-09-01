@@ -97,6 +97,38 @@ skills/              las skills de Claude Code, enlazadas a nivel de usuario
 El índice no usa base de datos ni cgo: un fichero `gob` y coseno por fuerza
 bruta. Para unos miles de fragmentos es instantáneo y no tiene nada que romperse.
 
+## Nada se pisa: variantes por pasada y por tema
+
+Abres el entregable en OnlyOffice, lo retocas y lo usas. La siguiente pasada
+**no lo destruye**:
+
+```bash
+sisifo producir --tipo pptx            # salida/informe.pptx
+sisifo producir --tipo pptx            # salida/informe-v2.pptx   (no pisa)
+sisifo producir --tipo pptx --variante tema3   # salida/informe-tema3.pptx
+sisifo producir --tipo pptx --sobrescribir     # solo si lo pides
+```
+
+Así puedes tener unas diapositivas distintas en cada pasada, o una por cada
+tema que vayas desarrollando, sin perder lo que ya revisaste a mano.
+
+## Hojas de cálculo con identidad
+
+Un Excel genérico se nota. Hay seis temas que difieren en color, trato de la
+cabecera, bandas y bordes; cada trabajo recibe uno de forma estable —el mismo
+trabajo sale siempre igual, trabajos distintos se ven distintos— y el BRIEF
+puede imponer el suyo:
+
+```bash
+sisifo producir --tipo xlsx --estilo tecnico
+sisifo producir --estilo '?'     # lista los temas
+```
+
+```yaml
+formato:
+  estilo: oliva      # en el BRIEF: manda sobre la elección automática
+```
+
 ## Un guion, tres formatos
 
 `guion.json` describe el documento una sola vez y produce el informe, las
@@ -113,6 +145,11 @@ diapositivas y la hoja de cálculo:
 Las citas se insertan con el texto que produce citeproc, nunca escrito a mano.
 **Citar una clave no verificada hace fallar la generación**, no produce un
 documento con una referencia dudosa dentro.
+
+El PPTX se genera con **pptxgenjs** cuando hay Node: tablas y gráficos quedan
+como objetos nativos y editables en PowerPoint, con notas del orador, en vez de
+imágenes planas. Sin Node se usa python-pptx, que produce lo mismo salvo los
+gráficos nativos. Forzar uno u otro: `SISIFO_PPTX=python`.
 
 ## Pruebas
 

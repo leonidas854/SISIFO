@@ -40,13 +40,13 @@ func (e EstadoVerificacion) Explicacion() string {
 
 // Referencia es una obra citable.
 type Referencia struct {
-	Clave           string // apellido2020palabra, la que se usa en el texto
-	Titulo          string
-	DOI             string
-	Estado          EstadoVerificacion
-	Registro        string // Crossref, DataCite… dónde se comprobó
+	Clave            string // apellido2020palabra, la que se usa en el texto
+	Titulo           string
+	DOI              string
+	Estado           EstadoVerificacion
+	Registro         string // Crossref, DataCite… dónde se comprobó
 	TituloRegistrado string
-	ConfirmadaAMano bool
+	ConfirmadaAMano  bool
 }
 
 // Citable decide si esta referencia puede aparecer en el trabajo.

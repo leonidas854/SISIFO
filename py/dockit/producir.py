@@ -47,7 +47,22 @@ def main() -> int:
     p.add_argument("--carpeta", type=Path, required=True)
     p.add_argument("--guion", default="guion.json")
     p.add_argument("--tipo", help="coma-separado; por defecto, el del guion")
+    p.add_argument("--variante",
+                   help="nombre de esta salida, p. ej. el tema que desarrollas: "
+                        "diapos-tema3.pptx")
+    p.add_argument("--sobrescribir", action="store_true",
+                   help="pisa el archivo anterior (por defecto se numera)")
+    p.add_argument("--estilo",
+                   help="tema visual de las hojas de cálculo; "
+                        "'--estilo ?' los lista")
     args = p.parse_args()
+
+    if args.estilo == "?":
+        from dockit.generadores import estilos
+        print("temas disponibles:")
+        for nombre, desc in estilos.listar():
+            print(f"  {nombre:<12} {desc}")
+        return 0
 
     carpeta = args.carpeta.resolve()
     ruta_guion = carpeta / args.guion
@@ -76,6 +91,9 @@ def main() -> int:
     tipos = ([t.strip() for t in args.tipo.split(",")] if args.tipo
              else [guion.get("tipo", "docx")])
     formato = formato_del_brief(carpeta)
+    formato["_trabajo"] = carpeta.name          # semilla estable del tema visual
+    if args.estilo:
+        formato["estilo"] = args.estilo
 
     salida = carpeta / "salida"
     salida.mkdir(parents=True, exist_ok=True)
@@ -85,14 +103,22 @@ def main() -> int:
         g = dict(guion, tipo=tipo)
         destino = salida / f"{base}.{tipo}"
         try:
-            r = generar_desde_guion(g, str(destino), bibliografia, en_texto, formato)
+            r = generar_desde_guion(g, str(destino), bibliografia, en_texto,
+                                    formato, variante=args.variante,
+                                    sobrescribir=args.sobrescribir)
         except GuionInvalido as e:
             print(f"[falla] {tipo}: {e}", file=sys.stderr)
             return 1
         unidad = {"docx": "páginas", "pptx": "diapositivas",
                   "xlsx": "hojas"}.get(tipo, "unidades")
         aprox = "~" if r.get("unidades_estimadas") else ""
-        print(f"[ ok ] {destino.relative_to(carpeta)} — {aprox}{r['unidades']} {unidad}")
+        escrito = Path(r["ruta"])
+        extra = f" · estilo {r['estilo']}" if r.get("estilo") else ""
+        aviso = ""
+        if escrito.name != destino.name:
+            aviso = "   (no pisé el anterior)"
+        print(f"[ ok ] {escrito.relative_to(carpeta)} — "
+              f"{aprox}{r['unidades']} {unidad}{extra}{aviso}")
 
     print("\nrevisa el resultado en OnlyOffice y luego: sisifo verificar")
     return 0

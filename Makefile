@@ -1,9 +1,15 @@
 .PHONY: build install test test-go test-py doctor limpiar
 
+GO ?= go
 VENV := .venv/bin/python
+BINDIR := bin
+BINARY := $(BINDIR)/sisifo
+LEGACY_BINARY := $(BINDIR)/taller
 
 build:
-	go build -o bin/taller ./cmd/taller
+	mkdir -p $(BINDIR)
+	$(GO) build -o $(BINARY) ./cmd/sisifo
+	ln -sfn sisifo $(LEGACY_BINARY)
 
 install:
 	./install.sh
@@ -11,14 +17,16 @@ install:
 test: test-go test-py
 
 test-go:
-	go vet ./...
-	go test ./... 
+	$(GO) vet ./...
+	$(GO) test ./...
 
 test-py:
 	cd py && ../$(VENV) -m pytest tests/ -q
 
 doctor: build
-	./bin/taller doctor
+	$(BINARY) doctor
 
 limpiar:
-	rm -rf bin/ py/**/__pycache__ py/.pytest_cache
+	rm -f $(BINARY) $(LEGACY_BINARY)
+	find py -type d -name __pycache__ -prune -exec rm -rf {} +
+	rm -rf py/.pytest_cache
