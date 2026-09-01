@@ -134,4 +134,9 @@ def guion_diapositivas(titulo: str, secciones: list[dict]) -> dict:
             continue
         bloques.append({"clase": "titulo", "nivel": 1, "texto": sec["titulo"]})
         bloques.append({"clase": "lista", "items": vinetas})
+        # el diagrama de la sección, dibujado a partir de estas mismas viñetas
+        if sec.get("imagen"):
+            bloques.append({"clase": "figura", "ruta": sec["imagen"],
+                            "leyenda": sec["titulo"],
+                            "fuente": "Elaboración propia"})
     return {"tipo": "pptx", "titulo": titulo, "autor": "", "bloques": bloques}

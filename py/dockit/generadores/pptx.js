@@ -173,7 +173,56 @@ function addCover(pptx, input, colors, font) {
   return slide;
 }
 
-function addContentSlide(pptx, section, items, colors, font, number, continuation, variant) {
+// Viñetas a la izquierda, diagrama a la derecha. El diagrama sale de esas
+// mismas viñetas, así que verlos juntos es lo que da sentido a la lámina.
+function addContentSlideConFigura(pptx, section, items, colors, font, number,
+                                  continuation, variant, figura) {
+  const fs = require('fs');
+  const slide = pptx.addSlide();
+  slide.background = { color: colors.paper };
+  addTitle(slide, section, font, colors, continuation);
+  // sin motivo decorativo: con el diagrama a la derecha, los círculos de
+  // adorno acababan pisando la última viñeta
+
+  const colW = 5.6;
+  let y = 1.6;
+  for (const item of items.slice(0, 5)) {
+    slide.addShape('ellipse', {
+      x: 0.8, y: y + 0.16, w: 0.2, h: 0.2,
+      fill: { color: colors.primary }, line: { color: colors.primary },
+    });
+    slide.addText(item.text, {
+      x: 1.15, y, w: colW - 0.5, h: 1.0,
+      fontFace: font, fontSize: bodySize(24), color: colors.ink,
+      margin: 0, valign: 'top', fit: 'shrink',
+    });
+    y += 1.12;
+  }
+
+  if (figura && figura.ruta && fs.existsSync(figura.ruta)) {
+    slide.addImage({
+      path: figura.ruta,
+      x: colW + 0.7, y: 1.45, w: W - colW - 1.4, h: (W - colW - 1.4) * 0.5625,
+      sizing: { type: 'contain', w: W - colW - 1.4, h: (W - colW - 1.4) * 0.5625 },
+    });
+    if (figura.fuente) {
+      slide.addText(`Fuente: ${figura.fuente}`, {
+        x: colW + 0.9, y: H - 1.25, w: W - colW - 1.7, h: 0.4,
+        fontFace: font, fontSize: 13, italic: true,
+        color: colors.muted, margin: 0, align: 'right',
+      });
+    }
+  }
+  addSlideNumber(slide, number, font, colors);
+  addNotes(slide, section, items.map((i) => i.full || i.text));
+  return slide;
+}
+
+function addContentSlide(pptx, section, items, colors, font, number, continuation, variant, figura) {
+  if (figura) {
+    return addContentSlideConFigura(pptx, section, items, colors, font, number,
+                                    continuation, variant, figura);
+  }
   const slide = pptx.addSlide();
   slide.background = { color: colors.paper };
   addTitle(slide, section, font, colors, continuation);
@@ -408,11 +457,14 @@ function sectionsFromGuion(guion, inText) {
   let section = null;
   let items = [];
 
+  let figura = null;
+
   function flush() {
     if (!section) return;
-    events.push({ kind: 'content', title: section, items });
+    events.push({ kind: 'content', title: section, items, figura });
     section = null;
     items = [];
+    figura = null;
   }
 
   for (const block of guion.bloques || []) {
@@ -448,8 +500,15 @@ function sectionsFromGuion(guion, inText) {
         events.push({ kind: 'chart', block });
         break;
       case 'figura':
-        flush();
-        events.push({ kind: 'figure', block });
+        // Si hay una sección abierta, el diagrama va EN esa lámina, junto a
+        // sus viñetas: una imagen en lámina aparte rompe el ritmo y obliga a
+        // recordar de qué se hablaba.
+        if (section) {
+          figura = block;
+        } else {
+          flush();
+          events.push({ kind: 'figure', block });
+        }
         break;
       case 'bibliografia':
         flush();
@@ -499,7 +558,9 @@ async function generate(input) {
       const groups = [];
       for (let i = 0; i < sourceItems.length; i += 6) groups.push(sourceItems.slice(i, i + 6));
       for (let i = 0; i < groups.length; i += 1) {
-        addContentSlide(pptx, event.title, groups[i], colors, font, number, i > 0, variant);
+        // el diagrama va en la primera lámina de la sección
+        addContentSlide(pptx, event.title, groups[i], colors, font, number,
+                        i > 0, variant, i === 0 ? event.figura : null);
         number += 1;
         variant += 1;
       }

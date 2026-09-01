@@ -7,9 +7,13 @@ determinista, sin modelo generativo, sin texto y en la paleta de la plantilla.
 
     {"tipo": "fila", "iconos": ["ojo", "candado", "farola"], "acento": [0]}
 
-Reutiliza la biblioteca de iconos canónica de `TEMAS_CON_IMAGENES/herramientas/vector.py`.
-Ningún diagrama dibuja texto: los rótulos los coloca el usuario en PowerPoint, y cada
-arquetipo deja espacio limpio para ellos.
+Reutiliza la biblioteca de iconos canónica de `pptx_/vector.py`.
+
+**Los diagramas dibujan sus rótulos.** Antes no lo hacían —se dejaba la franja
+inferior libre para que el usuario los escribiera a mano en PowerPoint— y el
+resultado fueron láminas de iconos sin una sola letra, imposibles de relacionar
+con lo que decía la diapositiva. Un diagrama sin rótulos no es un diagrama: es
+un adorno.
 """
 
 from __future__ import annotations
@@ -21,7 +25,9 @@ import sys
 from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
-CANONICO = RAIZ.parent / "TEMAS_CON_IMAGENES" / "herramientas" / "vector.py"
+# La biblioteca de iconos vive en el paquete pptx_. Antes se apuntaba a la
+# carpeta del proyecto original, que dejó de existir al centralizar el código.
+CANONICO = Path(__file__).resolve().parent.parent / "pptx_" / "vector.py"
 
 OLIVA, VERDE, GRIS, ORO = "#455119", "#5E672C", "#838858", "#C9A538"
 FONDO, PAPEL, TENUE = "#F4F2EA", "#EDEADE", "#B9BCA4"
@@ -59,6 +65,92 @@ def _marco(w: int, h: int, cuerpo: str) -> str:
         f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {w} {h}" width="{w}" height="{h}">'
         f'<rect width="{w}" height="{h}" fill="{FONDO}"/>{cuerpo}</svg>'
     )
+
+
+TIPO_LETRA = "DejaVu Sans, Liberation Sans, Arial, sans-serif"
+ROTULO_PX, TITULO_PX = 34, 46
+MAX_LINEAS = 3
+
+
+def _escapar(s: str) -> str:
+    return (str(s).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;"))
+
+
+def _partir(texto: str, max_car: int) -> list[str]:
+    """Parte el rótulo en líneas por palabras; si no cabe, lo recorta con puntos
+    suspensivos en vez de dejar que se salga del lienzo."""
+    palabras = str(texto).split()
+    lineas, actual = [], ""
+    for palabra in palabras:
+        prueba = f"{actual} {palabra}".strip()
+        if len(prueba) <= max_car:
+            actual = prueba
+            continue
+        if actual:
+            lineas.append(actual)
+        actual = palabra
+        if len(lineas) == MAX_LINEAS:
+            break
+    if actual and len(lineas) < MAX_LINEAS:
+        lineas.append(actual)
+    if not lineas:
+        return [""]
+    if len(lineas) == MAX_LINEAS and len(" ".join(palabras)) > sum(map(len, lineas)) + 2:
+        lineas[-1] = lineas[-1][:max_car - 1].rstrip() + "…"
+    return lineas
+
+
+def texto(x: float, y: float, contenido: str, px: int = ROTULO_PX,
+          color: str = OLIVA, peso: str = "600", ancla: str = "middle",
+          max_car: int = 22) -> str:
+    """Un rótulo centrado, partido en líneas si hace falta."""
+    lineas = _partir(contenido, max_car)
+    salida = (f'<text x="{x:.0f}" y="{y:.0f}" font-family="{TIPO_LETRA}" '
+              f'font-size="{px}" font-weight="{peso}" fill="{color}" '
+              f'text-anchor="{ancla}">')
+    for i, linea in enumerate(lineas):
+        dy = 0 if i == 0 else px * 1.15
+        salida += (f'<tspan x="{x:.0f}" dy="{dy:.0f}">{_escapar(linea)}</tspan>')
+    return salida + "</text>"
+
+
+# Marca invisible que deja el arquetipo que ya rotuló. Comprobarlo mirando el
+# texto no vale: los rótulos van partidos en <tspan> y nunca coinciden enteros.
+MARCA_ROTULOS = "<!--rotulos-->"
+
+
+def _rotulos_de(spec: dict) -> list[str]:
+    return [str(r) for r in (spec.get("rotulos") or spec.get("etiquetas") or [])]
+
+
+def _banda_rotulos(spec: dict, w: int, h: int, posiciones: list[float],
+                   y: float) -> str:
+    """Rótulos alineados bajo cada elemento del diagrama."""
+    rotulos = _rotulos_de(spec)
+    if not rotulos or not posiciones:
+        return ""
+    n = max(len(posiciones), 1)
+    ancho = w / n
+    # con muchas columnas el rótulo encoge un poco y se parte en más líneas,
+    # que es preferible a que dos rótulos vecinos se toquen
+    px = ROTULO_PX if n <= 3 else max(24, int(ROTULO_PX * 0.78))
+    max_car = max(10, int(ancho * 0.92 / (px * 0.55)))
+    acento = set(spec.get("acento", range(len(rotulos))))
+    salida = MARCA_ROTULOS
+    for i, x in enumerate(posiciones):
+        if i >= len(rotulos):
+            break
+        salida += texto(x, y, rotulos[i], px,
+                        OLIVA if i in acento else GRIS, max_car=max_car)
+    return salida
+
+
+def _titulo(spec: dict, w: int) -> str:
+    titulo = str(spec.get("titulo") or "").strip()
+    if not titulo:
+        return ""
+    return texto(w / 2, 74, titulo, TITULO_PX, OLIVA, "700",
+                 max_car=max(18, int(w / (TITULO_PX * 0.52))))
 
 
 # --------------------------------------------------------------------------- arquetipos
@@ -99,6 +191,9 @@ def fila(spec, w, h):
         borde = OLIVA if activo else GRIS
         s += f'<circle cx="{x:.0f}" cy="{cy:.0f}" r="{rad:.0f}" fill="{PAPEL}" stroke="{borde}" stroke-width="6"/>'
         s += icono(nombre, x, cy, rad * 1.2, c, a)
+    # la franja inferior era para los rótulos y estaba vacía: aquí se dibujan
+    s += _banda_rotulos(spec, w, h, [paso * (i + 0.5) for i in range(n)],
+                        cy + rad + ROTULO_PX * 1.5)
     return s
 
 
@@ -371,10 +466,26 @@ ARQUETIPOS = {
 
 
 def construir(spec: dict, w: int = 1600, h: int = 1200) -> str:
+    """Dibuja el diagrama con su título y sus rótulos.
+
+    Ningún arquetipo puede salir sin texto: si el suyo no coloca los rótulos,
+    se añade una banda inferior con ellos. Un diagrama mudo no dice nada de la
+    diapositiva que acompaña.
+    """
     tipo = spec["tipo"]
     if tipo not in ARQUETIPOS:
         raise KeyError(f"arquetipo desconocido: {tipo}. Disponibles: {sorted(ARQUETIPOS)}")
-    return _marco(w, h, ARQUETIPOS[tipo](spec, w, h))
+
+    cuerpo = ARQUETIPOS[tipo](spec, w, h)
+    cuerpo += _titulo(spec, w)
+
+    rotulos = _rotulos_de(spec)
+    if rotulos and MARCA_ROTULOS not in cuerpo:
+        n = len(rotulos)
+        cuerpo += _banda_rotulos(spec, w, h,
+                                 [w / n * (i + 0.5) for i in range(n)],
+                                 h - ROTULO_PX * 1.6)
+    return _marco(w, h, cuerpo)
 
 
 def escribir(spec: dict, destino: Path, w: int = 1600, h: int = 1200) -> Path:

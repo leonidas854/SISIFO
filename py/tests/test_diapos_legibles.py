@@ -111,3 +111,31 @@ def test_las_referencias_no_secuestran_la_presentacion(tmp_path):
     refs = [t for t in titulos if t.startswith("Referencias")]
     assert len(refs) <= 2, f"{len(refs)} láminas de referencias es demasiado"
     assert len(pres.slides) <= 6, f"{len(pres.slides)} láminas para 2 ideas"
+
+
+def test_la_imagen_va_en_la_misma_lamina_que_las_vinetas(tmp_path):
+    """«cada diapo debe tener imágenes»: el diagrama acompaña a las viñetas,
+    no ocupa una lámina aparte que rompe el ritmo de la exposición."""
+    from dockit.imagen import ilustrar
+    png = ilustrar.ilustrar_lamina("Riesgos", ["Manipulación", "Centralización"],
+                                   tmp_path, "fig")
+    assert png, "no se generó el diagrama de prueba"
+    guion = {"tipo": "pptx", "titulo": "T", "bloques": [
+        {"clase": "titulo", "nivel": 1, "texto": "Riesgos"},
+        {"clase": "lista", "items": ["Manipulación", "Centralización"]},
+        {"clase": "figura", "ruta": str(png), "leyenda": "Riesgos"}]}
+    d = tmp_path / "j.pptx"
+    pptx_node.generar(guion, str(d), {}, {})
+    pres = Presentation(str(d))
+
+    laminas_con_imagen = [
+        s for s in pres.slides
+        if any(sh.shape_type == 13 or sh.__class__.__name__ == "Picture"
+               for sh in s.shapes)]
+    assert laminas_con_imagen, "ninguna lámina lleva imagen"
+
+    s = laminas_con_imagen[0]
+    textos = " ".join(sh.text_frame.text for sh in s.shapes
+                      if sh.has_text_frame and sh.text_frame.text)
+    assert "Manipulación" in textos, \
+        "la imagen quedó en una lámina aparte, sin sus viñetas"

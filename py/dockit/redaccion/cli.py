@@ -21,6 +21,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
+from dockit.imagen import ilustrar  # noqa: E402
 from dockit.redaccion import anclaje, limpieza, ollama, plan  # noqa: E402
 
 
@@ -128,7 +129,12 @@ def main() -> int:
                            modelo=args.modelo, maximo=260),
             maximo=args.vinetas)
         if vinetas:
-            para_diapos.append({"titulo": sec["titulo"], "vinetas": vinetas})
+            # el diagrama sale de estas viñetas: no puede hablar de otra cosa
+            imagen = ilustrar.ilustrar_lamina(
+                sec["titulo"], vinetas, carpeta / "trabajo" / "figuras", f"s{i}")
+            para_diapos.append({
+                "titulo": sec["titulo"], "vinetas": vinetas,
+                "imagen": str(imagen) if imagen else None})
         print(f"  [{i}/{len(secciones)}] {sec['titulo']}: "
               f"{len(limpio.split())} palabras · {len(citadas)} citas · "
               f"{len(nuevas)} afirmaciones")
@@ -147,8 +153,9 @@ def main() -> int:
         json.dumps(diapos, ensure_ascii=False, indent=2), encoding="utf-8")
 
     print(f"\nguion.json: {len(bloques)} bloques")
+    con_imagen = sum(1 for s in para_diapos if s.get("imagen"))
     print(f"guion_diapos.json: {len(para_diapos)} láminas, "
-          f"una por sección del índice")
+          f"una por sección del índice · {con_imagen} con diagrama")
     print(f"afirmaciones.json: {len(afirmaciones)} afirmaciones que verificar")
     if descartadas_total:
         # se cuentan por identidad, no por grafía: Egberts2017 y egberts2017
