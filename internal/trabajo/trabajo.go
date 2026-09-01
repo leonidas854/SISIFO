@@ -21,7 +21,7 @@ func Motor() (string, error) {
 		if r, err := filepath.EvalSymlinks(exe); err == nil {
 			exe = r
 		}
-		// bin/taller -> raíz está un nivel arriba
+		// bin/sisifo -> raíz está un nivel arriba
 		for _, c := range []string{
 			filepath.Dir(filepath.Dir(exe)),
 			filepath.Dir(exe),

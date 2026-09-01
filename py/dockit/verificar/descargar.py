@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Descarga los PDF de acceso abierto de la biblioteca.
 
-    taller descargar [--todos]
+    sisifo descargar [--todos]
 
 Solo baja lo que las propias APIs publican como acceso abierto (`_pdf`), y para
 los que no lo traen consulta Unpaywall, que da la copia legal cuando existe.
@@ -74,7 +74,7 @@ def main() -> int:
 
     biblioteca = args.carpeta / "fuentes" / "biblioteca.json"
     if not biblioteca.exists():
-        sys.exit("no hay fuentes/biblioteca.json — usa 'taller buscar' primero")
+        sys.exit("no hay fuentes/biblioteca.json — usa 'sisifo buscar' primero")
     refs = json.loads(biblioteca.read_text())
 
     destino = args.carpeta / "fuentes" / "pdf"
@@ -119,7 +119,7 @@ def main() -> int:
     print(f"{con_pdf}/{len(refs)} referencias con PDF local en fuentes/pdf/")
     if not MAILTO:
         print("sugerencia: export TALLER_MAILTO=tu@correo -> Unpaywall busca más copias legales")
-    print("siguiente: taller extraer")
+    print("siguiente: sisifo extraer")
     return 0
 
 

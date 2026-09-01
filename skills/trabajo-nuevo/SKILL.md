@@ -42,12 +42,12 @@ sigue, pero anótalo en el brief como pendiente.
 Una sola orden, sin escribir archivos a mano:
 
 ```bash
-./taller nuevo <slug> --titulo "..." --materia "..." --entrega AAAA-MM-DD \
+./sisifo nuevo <slug> --titulo "..." --materia "..." --entrega AAAA-MM-DD \
          --entregable "salida/informe.docx:docx:10" \
          --entregable "salida/diapos.pptx:pptx:15"
 ```
 
-`./taller` está en la raíz de `tareas/` y es el único punto de entrada: no hay
+`./sisifo` está en la raíz de `tareas/` y es el único punto de entrada: no hay
 que recordar rutas de scripts ni qué intérprete usar.
 
 `--entregable` es `ruta:tipo[:mínimo]`, repetible. El mínimo es lo que convierte

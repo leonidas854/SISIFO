@@ -6,7 +6,7 @@ que aguantar que un tribunal la mire.
 ## 1. Definir
 
 ```bash
-taller nuevo mi-tesis --titulo "..." \
+sisifo nuevo mi-tesis --titulo "..." \
       --entregable "salida/tesis.docx:docx:60" \
       --entregable "salida/defensa.pptx:pptx:20"
 ```
@@ -29,11 +29,11 @@ búsqueda sea **reproducible** y lo que se escribe en el capítulo de método.
 ## 2. Investigar
 
 ```bash
-taller buscar "tu tema en inglés" --fuentes openalex,crossref,doaj --n 40
-taller buscar "tu tema en español" --fuentes openalex --idioma es --n 25
-taller descargar          # los abiertos
-taller extraer            # PDF -> texto
-taller indexar            # una vez, tras extraer
+sisifo buscar "tu tema en inglés" --fuentes openalex,crossref,doaj --n 40
+sisifo buscar "tu tema en español" --fuentes openalex --idioma es --n 25
+sisifo descargar          # los abiertos
+sisifo extraer            # PDF -> texto
+sisifo indexar            # una vez, tras extraer
 ```
 
 `fuentes/busquedas.json` guarda cada consulta con su fecha: eso es el registro
@@ -42,7 +42,7 @@ que se cita en el método.
 ## 3. Leer sin arruinarse
 
 ```bash
-taller consultar "¿qué se sabe de X?" 8
+sisifo consultar "¿qué se sabe de X?" 8
 ```
 
 Lee **los pasajes**, no los PDF. De ahí salen las citas literales, ya copiadas
@@ -57,14 +57,14 @@ Según escribes, cada afirmación con cifra entra en `afirmaciones.json`:
 ```
 
 ```bash
-taller datos       # falla si alguna cita no está en su fuente
+sisifo datos       # falla si alguna cita no está en su fuente
 ```
 
 ## 5. Producir
 
 ```bash
-taller bib --verificar    # comprueba cada DOI, saca APA 7 y las citas en texto
-taller producir --tipo docx,pptx
+sisifo bib --verificar    # comprueba cada DOI, saca APA 7 y las citas en texto
+sisifo producir --tipo docx,pptx
 ```
 
 El guion (`guion.json`) describe el documento una vez y produce el informe y la
@@ -73,7 +73,7 @@ defensa. **No se puede citar lo que no esté verificado**: el generador se plant
 ## 6. Entregar
 
 ```bash
-taller verificar          # sin --rapido: cuenta las páginas de verdad
+sisifo verificar          # sin --rapido: cuenta las páginas de verdad
 ```
 
 Ábrelo en OnlyOffice, revísalo entero, y solo entonces confirma los criterios

@@ -16,7 +16,7 @@ decisiones reemplazables; las reglas no.
 
 ```
         ┌──────────── adaptadores de entrada ────────────┐
-        │  CLI (cmd/taller)          [futuro: HTTP/TUI]  │
+        │  CLI (cmd/sisifo)          [futuro: HTTP/TUI]  │
         └───────────────────┬────────────────────────────┘
                             ▼
         ┌──────────── casos de uso (internal/casos) ─────┐

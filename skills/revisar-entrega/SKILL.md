@@ -11,11 +11,11 @@ existe para que **nunca vuelvas a decir "listo" sin haberlo comprobado.**
 ## El ciclo
 
 ```bash
-cd <carpeta-del-trabajo> && ../taller verificar
+cd <carpeta-del-trabajo> && ../sisifo verificar
 ```
 
 `taller` detecta solo sobre qué trabajo actúa: sube desde donde estés hasta
-encontrar el `BRIEF.md`. Desde la raíz, `./taller estado` resume todos.
+encontrar el `BRIEF.md`. Desde la raíz, `./sisifo estado` resume todos.
 
 Sale con código 1 si algo automático falla. Añade `--rapido` para saltarte el
 conteo real de páginas de los `.docx` (que convierte con LibreOffice y tarda);

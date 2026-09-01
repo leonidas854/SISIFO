@@ -1,4 +1,4 @@
-// taller — punto de entrada único del taller de trabajos e investigación.
+// sisifo — punto de entrada único del taller de trabajos e investigación.
 //
 // El motor vive fuera de los proyectos: borrar una carpeta de trabajo no se
 // lleva nada del sistema.
@@ -11,24 +11,24 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/leonidas854/taller/internal/indice"
-	"github.com/leonidas854/taller/internal/trabajo"
+	"github.com/leonidas854/sisifo/internal/indice"
+	"github.com/leonidas854/sisifo/internal/trabajo"
 )
 
-const ayuda = `taller — trabajos académicos e investigación verificable
+const ayuda = `SISIFO — trabajos académicos e investigación verificable
 
-  taller nuevo <slug> --titulo "..."   crea la carpeta y su BRIEF, aquí mismo
-  taller buscar "consulta"             busca en fuentes académicas reales
-  taller descargar                     baja los PDF de acceso abierto
-  taller extraer                       PDF -> texto
-  taller indexar                       índice semántico local (bge-m3)
-  taller consultar "pregunta"          recupera los pasajes que responden
-  taller datos                         ¿cada afirmación tiene respaldo?
-  taller bib [--verificar]             bibliografía APA 7 comprobada
-  taller producir [--tipo docx,pptx]   genera los entregables desde guion.json
-  taller verificar                     ¿está listo?
-  taller estado                        todos tus trabajos, estén donde estén
-  taller doctor                        revisa el entorno
+  sisifo nuevo <slug> --titulo "..."   crea la carpeta y su BRIEF, aquí mismo
+  sisifo buscar "consulta"             busca en fuentes académicas reales
+  sisifo descargar                     baja los PDF de acceso abierto
+  sisifo extraer                       PDF -> texto
+  sisifo indexar                       índice semántico local (bge-m3)
+  sisifo consultar "pregunta"          recupera los pasajes que responden
+  sisifo datos                         ¿cada afirmación tiene respaldo?
+  sisifo bib [--verificar]             bibliografía APA 7 comprobada
+  sisifo producir [--tipo docx,pptx]   genera los entregables desde guion.json
+  sisifo verificar                     ¿está listo?
+  sisifo estado                        todos tus trabajos, estén donde estén
+  sisifo doctor                        revisa el entorno
 
 Funciona desde cualquier carpeta: encuentra el trabajo subiendo hasta el BRIEF.md.`
 
@@ -92,7 +92,7 @@ func carpetaActual() string {
 		fmt.Fprintln(os.Stderr,
 			"no encuentro ningún BRIEF.md desde aquí hacia arriba.\n"+
 				"Métete en la carpeta del trabajo, o créala:\n"+
-				"  taller nuevo <slug> --titulo \"...\"")
+				"  sisifo nuevo <slug> --titulo \"...\"")
 		os.Exit(2)
 	}
 	return c
@@ -176,12 +176,12 @@ func indexar(motor string) {
 		fatal(err)
 	}
 	fmt.Printf("\n%d fragmentos indexados en fuentes/indice.gob\n", len(idx.Fragmentos))
-	fmt.Println("ahora: taller consultar \"tu pregunta\"")
+	fmt.Println("ahora: sisifo consultar \"tu pregunta\"")
 }
 
 func consultar(motor string, args []string) {
 	if len(args) == 0 {
-		fmt.Fprintln(os.Stderr, "uso: taller consultar \"tu pregunta\" [n]")
+		fmt.Fprintln(os.Stderr, "uso: sisifo consultar \"tu pregunta\" [n]")
 		os.Exit(2)
 	}
 	c := carpetaActual()
@@ -219,7 +219,7 @@ func recortar(s string, n int) string {
 func estado(motor string) {
 	rs := trabajo.Registrados(motor)
 	if len(rs) == 0 {
-		fmt.Println("todavía no hay trabajos registrados.\n  taller nuevo <slug> --titulo \"...\"")
+		fmt.Println("todavía no hay trabajos registrados.\n  sisifo nuevo <slug> --titulo \"...\"")
 		return
 	}
 	fmt.Printf("%d trabajo(s) registrados\n\n", len(rs))

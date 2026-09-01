@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 """Verifica que cada referencia EXISTE y la formatea en APA 7.
 
-    _taller/.venv/bin/python _taller/bin/bibliografia.py --carpeta <trabajo> \
-        [--verificar] [--locale es-ES] [--salida salida/bibliografia.md]
+    sisifo bib [--verificar] [--locale es-ES] [--salida salida/bibliografia.md]
 
 --verificar consulta cada DOI contra Crossref: si el DOI no resuelve, o el
 título registrado no se parece al que tenemos, se marca. Una referencia

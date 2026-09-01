@@ -3,13 +3,13 @@
 Versión corta del de tesis, para un trabajo de una asignatura.
 
 ```bash
-taller nuevo mi-monografia --titulo "..." --entregable "salida/monografia.docx:docx:15"
-taller buscar "tema" --fuentes openalex,crossref --n 20
-taller descargar && taller extraer && taller indexar
-taller consultar "pregunta concreta" 5
+sisifo nuevo mi-monografia --titulo "..." --entregable "salida/monografia.docx:docx:15"
+sisifo buscar "tema" --fuentes openalex,crossref --n 20
+sisifo descargar && sisifo extraer && sisifo indexar
+sisifo consultar "pregunta concreta" 5
 # escribir guion.json y afirmaciones.json
-taller datos && taller bib --verificar && taller producir
-taller verificar
+sisifo datos && sisifo bib --verificar && sisifo producir
+sisifo verificar
 ```
 
 Diferencias con la tesis: `minimo_referencias` sobre 15, sin `metodologia`

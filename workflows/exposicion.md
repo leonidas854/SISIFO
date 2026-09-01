@@ -4,7 +4,7 @@ Cuando el documento ya está escrito y hacen falta las diapositivas.
 
 ```bash
 cd <trabajo-existente>
-taller producir --tipo pptx
+sisifo producir --tipo pptx
 ```
 
 El mismo `guion.json` que produjo el `.docx` produce el `.pptx`: una lámina por

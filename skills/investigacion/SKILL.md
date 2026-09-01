@@ -25,7 +25,7 @@ Todo desde dentro de la carpeta del trabajo, con el comando único:
 
 ```bash
 cd <carpeta-del-trabajo>
-T=../taller     # o ./taller si estás en la raíz de tareas/
+T=../sisifo     # o ./sisifo si estás en la raíz de tareas/
 
 # 1. buscar en fuentes reales — repetible, va acumulando y deduplicando
 $T buscar "tu consulta" --fuentes openalex,crossref --n 25
@@ -65,7 +65,7 @@ entrada. Lo que lleve número, fecha, nombre propio o atribución, sí.
 
 ## Citar dentro del texto
 
-`taller bib` deja en `fuentes/citas_en_texto.json` el mapa `clave -> "(Autor, año)"`,
+`sisifo bib` deja en `fuentes/citas_en_texto.json` el mapa `clave -> "(Autor, año)"`,
 producido por el mismo motor que la lista de referencias. **Úsalo literalmente**:
 si escribes la cita a mano, el `et al.` y el orden de autores se desincronizan
 con la bibliografía.
@@ -88,12 +88,12 @@ del verificador es que no se pueda hacer trampa cómodamente.
 El cuello de botella es leer papers enteros. **No los leas.**
 
 ```bash
-taller indexar                                   # una vez, tras extraer
-taller consultar "¿qué dice la literatura sobre X?" 5
+sisifo indexar                                   # una vez, tras extraer
+sisifo consultar "¿qué dice la literatura sobre X?" 5
 ```
 
-`taller indexar` trocea las fuentes y las embebe con `bge-m3` en local, coste
-cero en tokens. `taller consultar` devuelve los pasajes más cercanos a tu
+`sisifo indexar` trocea las fuentes y las embebe con `bge-m3` en local, coste
+cero en tokens. `sisifo consultar` devuelve los pasajes más cercanos a tu
 pregunta, con su fuente y su cercanía.
 
 **Es multilingüe**: puedes preguntar en español sobre fuentes en inglés y las

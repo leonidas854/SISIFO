@@ -69,7 +69,7 @@ def main() -> int:
     bibliografia = cargar_json(carpeta / "fuentes" / "referencias_apa.json", {})
     if not bibliografia:
         if en_texto:
-            print("aviso: falta fuentes/referencias_apa.json — ejecuta 'taller bib'",
+            print("aviso: falta fuentes/referencias_apa.json — ejecuta 'sisifo bib'",
                   file=sys.stderr)
         bibliografia = {r["id"]: r.get("title", r["id"]) for r in refs if r.get("id")}
 
@@ -94,7 +94,7 @@ def main() -> int:
         aprox = "~" if r.get("unidades_estimadas") else ""
         print(f"[ ok ] {destino.relative_to(carpeta)} — {aprox}{r['unidades']} {unidad}")
 
-    print("\nrevisa el resultado en OnlyOffice y luego: taller verificar")
+    print("\nrevisa el resultado en OnlyOffice y luego: sisifo verificar")
     return 0
 
 

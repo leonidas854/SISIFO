@@ -123,7 +123,7 @@ func Construir(carpeta string, avisar func(string)) (*Indice, error) {
 	dir := filepath.Join(carpeta, "fuentes", "textos")
 	entradas, err := os.ReadDir(dir)
 	if err != nil {
-		return nil, fmt.Errorf("no hay fuentes/textos/ — usa 'taller extraer' antes")
+		return nil, fmt.Errorf("no hay fuentes/textos/ — usa 'sisifo extraer' antes")
 	}
 
 	idx := &Indice{Modelo: Modelo, Creado: time.Now()}
@@ -174,7 +174,7 @@ func (i *Indice) Guardar(carpeta string) error {
 func Cargar(carpeta string) (*Indice, error) {
 	f, err := os.Open(ruta(carpeta))
 	if err != nil {
-		return nil, fmt.Errorf("no hay índice — usa 'taller indexar' antes")
+		return nil, fmt.Errorf("no hay índice — usa 'sisifo indexar' antes")
 	}
 	defer f.Close()
 	var i Indice

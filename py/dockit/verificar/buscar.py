@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Busca en fuentes académicas reales y guarda los registros en CSL-JSON.
 
-    python3 _taller/bin/buscar.py "cadena de custodia digital" \
+    sisifo buscar "cadena de custodia digital" \
             --carpeta <trabajo> --fuentes openalex,crossref --n 25
 
 Nada de esto lo inventa un modelo: cada registro viene de una API pública con

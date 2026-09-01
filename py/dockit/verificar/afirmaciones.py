@@ -2,10 +2,10 @@
 """Comprueba que cada afirmación del trabajo salga de una fuente real.
 
     # 1. extraer el texto de los PDF que hay en fuentes/
-    _taller/.venv/bin/python _taller/bin/afirmaciones.py --carpeta <t> --extraer
+    sisifo extraer
 
     # 2. verificar afirmaciones.json contra ese texto
-    _taller/.venv/bin/python _taller/bin/afirmaciones.py --carpeta <t>
+    sisifo datos
 
 Cada entrada de `afirmaciones.json` declara qué se afirma, de qué fuente sale y
 con qué cita literal. La cita tiene que APARECER en el texto de la fuente. Una

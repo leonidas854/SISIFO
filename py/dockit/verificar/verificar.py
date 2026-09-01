@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Comprueba una entrega contra su BRIEF.md. Responde "¿esto está listo?".
 
-    python3 _taller/bin/verificar.py <carpeta-del-trabajo> [--rapido]
+    sisifo verificar <carpeta-del-trabajo> [--rapido]
 
 Todo lo que se puede comprobar solo, se comprueba solo (existencia, que el
 archivo abra, páginas/diapositivas mínimas, fuentes obligatorias, rastro de
@@ -29,7 +29,7 @@ OK, MAL, DUDA = "  ok  ", " FALTA", "  ?   "
 def leer_brief(carpeta: Path) -> dict:
     brief = carpeta / "BRIEF.md"
     if not brief.exists():
-        sys.exit(f"no hay BRIEF.md en {carpeta} — créalo con _taller/bin/nuevo.py")
+        sys.exit(f"no hay BRIEF.md en {carpeta} — créalo con sisifo")
     texto = brief.read_text(encoding="utf-8")
     m = re.match(r"^---\n(.*?)\n---\n", texto, re.S)
     if not m:

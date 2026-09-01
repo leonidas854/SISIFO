@@ -1,4 +1,4 @@
-# taller
+# SISIFO
 
 Herramientas para producir trabajos académicos e investigación **verificable**:
 documentos, diapositivas, PDF, audio y video, con bibliografía real y datos que
@@ -15,7 +15,7 @@ Tres problemas concretos, y lo que hace cada pieza:
 
 | Problema | Pieza |
 |---|---|
-| El trabajo queda a medias y "terminado" nunca se definió | `BRIEF.md` con criterio comprobable, y `taller verificar` que lo exige |
+| El trabajo queda a medias y "terminado" nunca se definió | `BRIEF.md` con criterio comprobable, y `sisifo verificar` que lo exige |
 | Los modelos inventan referencias y cifras | toda referencia se busca (nunca se escribe) y todo dato lleva cita literal comprobada |
 | Leer las fuentes cuesta carísimo | índice semántico local con `bge-m3`: se leen pasajes, no papers enteros |
 
@@ -26,7 +26,7 @@ Necesita Go 1.24+, Python 3.11+ y [ollama](https://ollama.com) con `bge-m3`.
 ```bash
 git clone https://github.com/leonidas854/taller.git
 cd taller && ./install.sh
-taller doctor          # comprueba que no falte nada
+sisifo doctor          # comprueba que no falte nada
 ```
 
 `install.sh` compila el binario, prepara el intérprete, enlaza `taller` en
@@ -36,30 +36,30 @@ borrar una carpeta de trabajo no toca el sistema.
 ## Uso
 
 ```bash
-taller nuevo mi-tesis --titulo "..." --entregable "salida/informe.docx:docx:40"
+sisifo nuevo mi-tesis --titulo "..." --entregable "salida/informe.docx:docx:40"
 cd mi-tesis
 
-taller buscar "tu tema" --fuentes openalex,crossref --n 30
-taller descargar             # los PDF de acceso abierto
-taller extraer               # PDF -> texto
-taller indexar               # índice semántico local
-taller consultar "¿qué dice la literatura sobre X?"
+sisifo buscar "tu tema" --fuentes openalex,crossref --n 30
+sisifo descargar             # los PDF de acceso abierto
+sisifo extraer               # PDF -> texto
+sisifo indexar               # índice semántico local
+sisifo consultar "¿qué dice la literatura sobre X?"
 
-taller datos                 # ¿cada afirmación tiene respaldo?
-taller bib --verificar       # bibliografía APA 7, cada DOI comprobado
-taller producir --tipo docx,pptx,xlsx   # los entregables, desde un solo guion
-taller verificar             # ¿está listo?
+sisifo datos                 # ¿cada afirmación tiene respaldo?
+sisifo bib --verificar       # bibliografía APA 7, cada DOI comprobado
+sisifo producir --tipo docx,pptx,xlsx   # los entregables, desde un solo guion
+sisifo verificar             # ¿está listo?
 
-taller estado                # todos tus trabajos, estén donde estén
+sisifo estado                # todos tus trabajos, estén donde estén
 ```
 
 Funciona desde cualquier carpeta: encuentra el trabajo subiendo hasta el `BRIEF.md`.
 
 ## Las dos barreras contra el dato inventado
 
-**Ninguna referencia se escribe: se busca.** `taller buscar` consulta OpenAlex,
+**Ninguna referencia se escribe: se busca.** `sisifo buscar` consulta OpenAlex,
 Crossref, DOAJ, arXiv y Europe PMC —gratis, sin clave— y guarda CSL-JSON con DOI.
-`taller bib --verificar` comprueba cada DOI contra **Crossref y, si no está,
+`sisifo bib --verificar` comprueba cada DOI contra **Crossref y, si no está,
 DataCite**:
 
 | Estado | Significa |
@@ -69,7 +69,7 @@ DataCite**:
 | `SIN-DOI` | puede ser legítimo (libro, norma, informe) — se verifica a mano |
 
 **Ninguna cifra se afirma: se cita.** `afirmaciones.json` ancla cada dato a una
-cita literal, y `taller datos` la busca en el texto de la fuente. Si no aparece,
+cita literal, y `sisifo datos` la busca en el texto de la fuente. Si no aparece,
 falla: una frase inventada no sobrevive porque su cita no está en ningún documento.
 
 El formato APA 7 lo produce citeproc-py con el estilo oficial CSL, no un modelo.
@@ -80,7 +80,7 @@ Go para lo que se beneficia de concurrencia y arranque instantáneo; Python para
 documentos y modelos, donde están las bibliotecas que hacen falta.
 
 ```
-cmd/taller/          CLI en Go: despacho, índice y consulta
+cmd/sisifo/          CLI en Go: despacho, índice y consulta
 internal/indice/     bge-m3 vía ollama, almacén gob, coseno por fuerza bruta
 internal/trabajo/    localiza el motor, la carpeta activa y el registro
 py/dockit/

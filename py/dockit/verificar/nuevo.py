@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Crea la carpeta de un trabajo nuevo con su BRIEF.md.
 
-    python3 _taller/bin/nuevo.py <slug> --titulo "..." [--materia "..."]
+    sisifo nuevo <slug> --titulo "..." [--materia "..."]
                                         [--entrega AAAA-MM-DD]
                                         [--entregable salida/X.docx:docx] ...
 

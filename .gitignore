@@ -1,13 +1,55 @@
-.venv/
-__pycache__/
-*.pyc
-node_modules/
+# ── artefactos de compilación e instalación ──────────────────────────────
 bin/
-trabajos.json
-*.gob
+.venv/
+*.exe
 
-# datos de trabajos concretos: viven en la carpeta del trabajo, no en el motor
+# ── Python ───────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+
+# ── Go ───────────────────────────────────────────────────────────────────
+*.test
+*.out
+vendor/
+
+# ── estado local, no del proyecto ────────────────────────────────────────
+trabajos.json          # el registro de trabajos es de esta máquina
+*.gob                  # índices semánticos: se reconstruyen con 'sisifo indexar'
+
+# ── datos de trabajos concretos ──────────────────────────────────────────
+# El motor no versiona el contenido de las entregas: eso vive en la carpeta
+# de cada trabajo, no aquí.
 plan_full.json
+guion.json
+afirmaciones.json
+biblioteca.json
 *.docx
 *.pptx
+*.xlsx
+*.pdf
+salida/
+fuentes/
+
+# ── binarios de tipografías ──────────────────────────────────────────────
+# No se redistribuyen: ver py/dockit/pptx_/FUENTES.md
 fonts/
+*.ttf
+*.otf
+
+# ── entorno y credenciales ───────────────────────────────────────────────
+.env
+.env.*
+*.key
+*.pem
+
+# ── editores y sistema ───────────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*~
+.DS_Store
+Thumbs.db

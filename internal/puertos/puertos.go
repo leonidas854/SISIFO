@@ -8,7 +8,7 @@ package puertos
 import (
 	"context"
 
-	"github.com/leonidas854/taller/internal/dominio"
+	"github.com/leonidas854/sisifo/internal/dominio"
 )
 
 // BuscadorAcademico encuentra referencias reales sobre un tema.
