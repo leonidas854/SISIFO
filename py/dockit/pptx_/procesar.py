@@ -1,3 +1,5 @@
+from pathlib import Path
+import os
 # -*- coding: utf-8 -*-
 """Procesa un tema completo: libera espacio, elige la imagen de cada diapositiva
 (foto web, gráfico propio o generada por IA) y la coloca en el hueco calculado."""
@@ -9,7 +11,23 @@ from PIL import Image
 import analyze2 as A, encoger as EN, reducir as RE, compactar as CO, reacomodar as RA
 import photo2 as P2, compose as C, grafgen as GG, graficos as G
 
-BASE = '/home/leonidas/SSD500/Develoment/tareas/proyectos_policias'
+def _base_proyecto() -> str:
+    """Carpeta del proyecto con los .pptx fuente.
+
+    Se fija con TALLER_PROYECTO; si no, se busca subiendo desde donde se
+    ejecuta. Nunca una ruta absoluta escrita a mano: el motor no puede depender
+    de que exista una carpeta de trabajo concreta, porque se borran.
+    """
+    if _v := os.environ.get("TALLER_PROYECTO"):
+        return str(Path(_v).resolve())
+    _aqui = Path.cwd().resolve()
+    for _c in [_aqui, *_aqui.parents]:
+        if any(_c.glob("*DIAPOSITIVA*.pptx")) or (_c / "diapos_original").is_dir():
+            return str(_c)
+    return str(_aqui)
+
+
+BASE = _base_proyecto()
 MIN_FOTO = (3.0, 1.45)      # ancho, alto mínimos para que una foto aporte
 MIN_GRAF = (4.2, 1.00)      # por debajo de esto el gráfico no se lee de lejos
 

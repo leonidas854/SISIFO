@@ -1,3 +1,4 @@
+from pathlib import Path
 #!/usr/bin/env python3
 """
 Script para combinar PDFs y PPTXs en un solo PDF optimizado para impresión.
@@ -20,7 +21,14 @@ from reportlab.lib import colors
 from pptx import Presentation
 from pptx.enum.shapes import MSO_SHAPE_TYPE
 
-FOLDER = '/home/leonidas/SSD500/Develoment/tareas/matmil'
+def _carpeta_trabajo() -> str:
+    """Carpeta con los archivos a procesar: TALLER_PROYECTO, o donde estés."""
+    if _v := os.environ.get("TALLER_PROYECTO"):
+        return str(Path(_v).resolve())
+    return str(Path.cwd().resolve())
+
+
+FOLDER = _carpeta_trabajo()
 OUTPUT = os.path.join(FOLDER, 'TODO_PARA_IMPRIMIR.pdf')
 TEMP_DIR = tempfile.mkdtemp(prefix='matmil_')
 

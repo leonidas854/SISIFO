@@ -1,3 +1,4 @@
+from pathlib import Path
 #!/usr/bin/env python3
 """
 Genera UN SOLO PDF listo para imprimir, con:
@@ -38,7 +39,14 @@ from reportlab.platypus import (
     KeepTogether, HRFlowable,
 )
 
-FOLDER = os.path.dirname(os.path.abspath(__file__))
+def _carpeta_trabajo() -> str:
+    """Carpeta con los archivos a procesar: TALLER_PROYECTO, o donde estés."""
+    if _v := os.environ.get("TALLER_PROYECTO"):
+        return str(Path(_v).resolve())
+    return str(Path.cwd().resolve())
+
+
+FOLDER = _carpeta_trabajo()
 OUTPUT = os.path.join(FOLDER, 'MATERIA-COMPLETA-IMPRIMIR.pdf')
 
 # ocr.txt = transcripcion manual de las diapositivas que son imagenes

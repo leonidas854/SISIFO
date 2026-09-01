@@ -1,3 +1,5 @@
+from pathlib import Path
+import os
 # -*- coding: utf-8 -*-
 """Arma el plan completo: qué recibe cada diapositiva de cada tema.
 Regla: foto si el concepto es fotografiable y no se repite; gráfico propio si el
@@ -7,7 +9,23 @@ import json, os, glob, re
 from consultas import consulta
 import etiquetas as E
 
-BASE = '/home/leonidas/SSD500/Develoment/tareas/proyectos_policias'
+def _base_proyecto() -> str:
+    """Carpeta del proyecto con los .pptx fuente.
+
+    Se fija con TALLER_PROYECTO; si no, se busca subiendo desde donde se
+    ejecuta. Nunca una ruta absoluta escrita a mano: el motor no puede depender
+    de que exista una carpeta de trabajo concreta, porque se borran.
+    """
+    if _v := os.environ.get("TALLER_PROYECTO"):
+        return str(Path(_v).resolve())
+    _aqui = Path.cwd().resolve()
+    for _c in [_aqui, *_aqui.parents]:
+        if any(_c.glob("*DIAPOSITIVA*.pptx")) or (_c / "diapos_original").is_dir():
+            return str(_c)
+    return str(_aqui)
+
+
+BASE = _base_proyecto()
 
 # Temas donde el contenido es una lista de conceptos: mejor gráfico propio
 FORZAR_GRAFICO = {
