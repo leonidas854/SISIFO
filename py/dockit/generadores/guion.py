@@ -6,7 +6,9 @@ generador lo interpreta a su manera, pero la validación es una sola y vive aqu�
 from __future__ import annotations
 
 CLASES = {"titulo", "parrafo", "lista", "tabla", "figura", "cita",
-          "salto", "bibliografia"}
+          "salto", "bibliografia",
+          # índices automáticos: campos de Word, nunca escritos a mano
+          "indice", "indice_tablas", "indice_figuras"}
 TIPOS = {"docx", "pptx", "xlsx", "md"}
 
 

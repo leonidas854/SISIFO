@@ -15,6 +15,7 @@ from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Cm, Pt, RGBColor
 
+from . import campos
 from . import guion as G
 
 TINTA = RGBColor(0x1A, 0x1A, 0x1A)
@@ -22,7 +23,8 @@ SUAVE = RGBColor(0x5A, 0x5A, 0x5A)
 PALABRAS_POR_PAGINA = 450  # para estimar; la medida real la da LibreOffice
 
 
-def _estilos(doc: Document, tipografia: str, cuerpo_pt: float) -> None:
+def _estilos(doc: Document, tipografia: str, cuerpo_pt: float,
+             interlineado: float = 1.5) -> None:
     normal = doc.styles["Normal"]
     normal.font.name = tipografia
     normal.font.size = Pt(cuerpo_pt)
@@ -30,7 +32,7 @@ def _estilos(doc: Document, tipografia: str, cuerpo_pt: float) -> None:
     normal.element.rPr.rFonts.set(qn("w:eastAsia"), tipografia)
     pf = normal.paragraph_format
     pf.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
-    pf.line_spacing = 1.5           # interlineado APA
+    pf.line_spacing = interlineado  # APA 7 pide doble; el BRIEF lo decide
     pf.space_after = Pt(6)
 
     for nombre, tam, antes, despues in [
@@ -52,19 +54,15 @@ def _estilos(doc: Document, tipografia: str, cuerpo_pt: float) -> None:
 
 
 def _numeracion_de_pagina(doc: Document) -> None:
-    """Número de página centrado en el pie, como campo de Word."""
+    """Número de página centrado en el pie, como campo de Word.
+
+    Se construye con el mismo helper que los índices: antes se creaba un
+    elemento inventado `<w:fldbegin>` y el pie acababa mostrando la palabra
+    «PAGE» en lugar del número.
+    """
     pie = doc.sections[0].footer.paragraphs[0]
     pie.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    corrida = pie.add_run()
-    for instruccion, valor in (("begin", None), ("instrText", "PAGE"), ("end", None)):
-        el = OxmlElement(f"w:fld{instruccion}" if instruccion != "instrText"
-                         else "w:instrText")
-        if instruccion == "instrText":
-            el.set(qn("xml:space"), "preserve")
-            el.text = valor
-        else:
-            el.set(qn("w:fldCharType"), instruccion)
-        corrida._r.append(el)
+    campos._run_con_campo(pie, "PAGE", "1")
 
 
 def _portada(doc: Document, guion: dict) -> None:
@@ -104,12 +102,8 @@ def _tabla(doc: Document, b: dict, tipografia: str) -> None:
             celdas[i].paragraphs[0].add_run(str(valor)).font.name = tipografia
 
     if b.get("leyenda"):
-        p = doc.add_paragraph()
-        p.alignment = WD_ALIGN_PARAGRAPH.LEFT
-        r = p.add_run(b["leyenda"])
-        r.italic = True
-        r.font.size = Pt(9)
-        r.font.color.rgb = SUAVE
+        campos.leyenda(doc, campos.ROTULO_TABLA, b["leyenda"], b.get("fuente", ""),
+                       WD_ALIGN_PARAGRAPH.LEFT)
 
 
 def _figura(doc: Document, b: dict) -> None:
@@ -117,16 +111,9 @@ def _figura(doc: Document, b: dict) -> None:
     if ruta.exists():
         doc.add_picture(str(ruta), width=Cm(14))
         doc.paragraphs[-1].alignment = WD_ALIGN_PARAGRAPH.CENTER
-    pie = b.get("leyenda", "")
-    if b.get("fuente"):
-        pie = f"{pie}  Fuente: {b['fuente']}".strip()
-    if pie:
-        p = doc.add_paragraph()
-        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        r = p.add_run(pie)
-        r.italic = True
-        r.font.size = Pt(9)
-        r.font.color.rgb = SUAVE
+    if b.get("leyenda") or b.get("fuente"):
+        campos.leyenda(doc, campos.ROTULO_FIGURA, b.get("leyenda", ""),
+                       b.get("fuente", ""), WD_ALIGN_PARAGRAPH.CENTER)
 
 
 def generar(guion: dict, destino: str, bibliografia: dict[str, str],
@@ -141,7 +128,8 @@ def generar(guion: dict, destino: str, bibliografia: dict[str, str],
     sec = doc.sections[0]
     sec.top_margin = sec.bottom_margin = Cm(margen)
     sec.left_margin = sec.right_margin = Cm(margen)
-    _estilos(doc, tipografia, cuerpo_pt)
+    _estilos(doc, tipografia, cuerpo_pt,
+             float(formato.get("interlineado", 1.5)))
     _numeracion_de_pagina(doc)
     _portada(doc, guion)
 
@@ -169,6 +157,18 @@ def generar(guion: dict, destino: str, bibliografia: dict[str, str],
             palabras += sum(len(str(c).split()) for f in b["filas"] for c in f)
         elif clase == "figura":
             _figura(doc, b)
+        elif clase == "indice":
+            campos.indice_contenido(doc, b.get("texto") or "Índice",
+                                    b.get("notas") or "1-3")
+            doc.add_page_break()
+        elif clase == "indice_tablas":
+            campos.indice_de(doc, campos.ROTULO_TABLA,
+                             b.get("texto") or "Índice de tablas")
+            doc.add_page_break()
+        elif clase == "indice_figuras":
+            campos.indice_de(doc, campos.ROTULO_FIGURA,
+                             b.get("texto") or "Índice de ilustraciones")
+            doc.add_page_break()
         elif clase == "salto":
             doc.add_page_break()
         elif clase == "bibliografia":
@@ -181,6 +181,7 @@ def generar(guion: dict, destino: str, bibliografia: dict[str, str],
                 p.paragraph_format.left_indent = Cm(1.27)
                 palabras += len(entrada.split())
 
+    campos.actualizar_campos_al_abrir(doc)
     Path(destino).parent.mkdir(parents=True, exist_ok=True)
     doc.save(destino)
     return {"ruta": destino,

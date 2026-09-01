@@ -27,11 +27,11 @@ fi
 echo "  intérprete listo"
 
 # ── 3. dependencias de Node (PPTX con gráficos nativos) ──────────────────
-if command -v npm >/dev/null; then
-  ( cd "$RAIZ" && npm install --silent --no-audit --no-fund )
+if command -v pnpm >/dev/null; then
+  ( cd "$RAIZ" && pnpm install --silent )
   echo "  pptxgenjs listo (gráficos y notas nativas en PPTX)"
 else
-  echo "  npm no está: el PPTX se generará con python-pptx (sin gráficos nativos)"
+  echo "  pnpm no está: el PPTX se generará con python-pptx (sin gráficos nativos)"
 fi
 
 # ── 4. binario Go ────────────────────────────────────────────────────────

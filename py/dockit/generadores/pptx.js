@@ -38,6 +38,15 @@ function palette(format) {
   };
 }
 
+// Las diapositivas se proyectan: por debajo de 24 pt la última fila no lee.
+// La escala se fija una vez en generate() y la usan todas las láminas, para no
+// tener que pasar el formato por cada firma.
+let ESCALA_TEXTO = 1;
+
+function bodySize(base) {
+  return Math.max(20, Math.round(base * ESCALA_TEXTO));
+}
+
 function safeFont(format) {
   const requested = String(format.tipografia || '').trim();
   const safe = new Set(['Arial', 'Calibri', 'Cambria', 'Times New Roman', 'Courier New', 'Bookman Old Style', 'Century Schoolbook']);
@@ -104,7 +113,7 @@ function addTitle(slide, title, font, colors, continuation = false) {
   const label = continuation ? `${title} · continuación` : title;
   slide.addText(label, {
     x: 0.68, y: 0.5, w: 11.8, h: 0.76,
-    fontFace: font, fontSize: continuation ? 30 : 36,
+    fontFace: font, fontSize: bodySize(continuation ? 34 : 40),
     bold: true, color: colors.ink, margin: 0,
     valign: 'mid', breakLine: false, fit: 'shrink',
   });
@@ -201,7 +210,7 @@ function addContentSlide(pptx, section, items, colors, font, number, continuatio
       });
       slide.addText(items[i].text, {
         x: x + 0.82, y: y + 0.25, w: cardW - 1.08, h: cardH - 0.5,
-        fontFace: font, fontSize: rows === 1 ? 20 : 16,
+        fontFace: font, fontSize: bodySize(rows <= 3 ? 28 : 24),
         color: colors.ink, margin: 0.04, valign: 'mid', fit: 'shrink',
         breakLine: false,
       });
@@ -220,7 +229,7 @@ function addContentSlide(pptx, section, items, colors, font, number, continuatio
         });
         slide.addText(item.text, {
           x: x + 0.42, y, w: 5.25, h: 0.93,
-          fontFace: font, fontSize: 16, color: colors.ink,
+          fontFace: font, fontSize: bodySize(24), color: colors.ink,
           margin: 0, valign: 'top', fit: 'shrink',
         });
         y += 1.16;
@@ -241,7 +250,7 @@ function addTableSlide(pptx, block, colors, font, number) {
   if (Array.isArray(block.cabecera) && block.cabecera.length) rows.push(block.cabecera.map(String));
   for (const row of block.filas || []) rows.push(row.map((value) => String(value)));
   const cols = Math.max(1, rows[0] ? rows[0].length : 1);
-  const fontSize = cols >= 6 ? 10 : cols >= 4 ? 12 : 14;
+  const fontSize = bodySize(cols >= 6 ? 14 : cols >= 4 ? 16 : 18);
   slide.addTable(rows, {
     x: 0.68, y: 1.48, w: 11.95, h: 4.9,
     fontFace: font, fontSize, color: colors.ink,
@@ -340,8 +349,15 @@ function addFigureSlide(pptx, block, colors, font, number) {
 }
 
 function addReferences(pptx, bibliography, colors, font, startNumber) {
-  const entries = Object.entries(bibliography).sort((a, b) => a[1].localeCompare(b[1], 'es'));
+  const todas = Object.entries(bibliography).sort((a, b) => a[1].localeCompare(b[1], 'es'));
   const perSlide = 5;
+  // Proyectadas no las lee nadie: su sitio es el informe. Se muestran las
+  // primeras y se dice cuántas quedan, en vez de encadenar veinte láminas.
+  const MAX_LAMINAS_REF = 2;
+  const tope = perSlide * MAX_LAMINAS_REF;
+  const entries = todas.slice(0, tope);
+  const restantes = todas.length - entries.length;
+  let lastSlide = null;
   let number = startNumber;
   if (!entries.length) {
     const slide = pptx.addSlide();
@@ -368,14 +384,21 @@ function addReferences(pptx, bibliography, colors, font, startNumber) {
       });
       slide.addText(entry, {
         x: 1.08, y, w: 11.35, h: 0.86,
-        fontFace: font, fontSize: 12, color: colors.ink,
+        fontFace: font, fontSize: bodySize(16), color: colors.ink,
         margin: 0, breakLine: false, fit: 'shrink',
       });
       y += 1.05;
     });
     addSlideNumber(slide, number, font, colors);
     addNotes(slide, 'Referencias', group.map(([, entry]) => entry));
+    lastSlide = slide;
     number += 1;
+  }
+  if (restantes > 0 && lastSlide) {
+    lastSlide.addText(
+      `y ${restantes} referencias más — la lista completa está en el informe.`,
+      { x: 0.9, y: H - 1.15, w: W - 1.8, h: 0.5, fontFace: font,
+        fontSize: 16, italic: true, color: colors.muted, margin: 0 });
   }
   return number;
 }
@@ -459,6 +482,7 @@ async function generate(input) {
   pptx.defineLayout({ name: 'SISIFO_WIDE', width: W, height: H });
   pptx.layout = 'SISIFO_WIDE';
 
+  ESCALA_TEXTO = Number((input.formato || {}).escala_texto) || 1;
   const colors = palette(input.formato || {});
   const font = safeFont(input.formato || {});
   addCover(pptx, input, colors, font);

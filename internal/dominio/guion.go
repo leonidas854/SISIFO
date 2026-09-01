@@ -17,11 +17,17 @@ const (
 	Cita         ClaseBloque = "cita"
 	SaltoPagina  ClaseBloque = "salto"
 	Bibliografia ClaseBloque = "bibliografia"
+	// Índices automáticos: son campos de Word (TOC/SEQ), nunca texto escrito
+	// a mano. Un trabajo de tesis los exige actualizables.
+	Indice        ClaseBloque = "indice"
+	IndiceTablas  ClaseBloque = "indice_tablas"
+	IndiceFiguras ClaseBloque = "indice_figuras"
 )
 
 var clasesValidas = map[ClaseBloque]bool{
 	Titulo: true, Parrafo: true, Lista: true, Tabla: true,
 	Figura: true, Cita: true, SaltoPagina: true, Bibliografia: true,
+	Indice: true, IndiceTablas: true, IndiceFiguras: true,
 }
 
 var tiposSalida = map[string]bool{"docx": true, "pptx": true, "xlsx": true, "md": true}

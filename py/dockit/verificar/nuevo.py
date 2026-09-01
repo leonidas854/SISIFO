@@ -13,6 +13,7 @@ import argparse
 import os
 import re
 import shutil
+import unicodedata
 import sys
 from datetime import date
 from pathlib import Path
@@ -38,9 +39,16 @@ SUBDIRS = ("fuentes", "salida", "trabajo")
 
 
 def slugificar(txt: str) -> str:
-    txt = txt.strip().lower()
-    txt = re.sub(r"[^a-z0-9]+", "-", txt)
-    return txt.strip("-")
+    """Nombre de carpeta seguro, conservando lo que el usuario escribió.
+
+    El guion bajo se respeta: si pide `mi_trabajo_2026`, esa es la carpeta y no
+    otra. Solo se traducen las tildes y se sustituye lo que podría formar una
+    ruta (`/`, `..`) o confundir al sistema de archivos.
+    """
+    txt = unicodedata.normalize("NFKD", txt.strip().lower())
+    txt = txt.encode("ascii", "ignore").decode()
+    txt = re.sub(r"[^a-z0-9_]+", "-", txt)
+    return re.sub(r"-{2,}", "-", txt).strip("-_") or "trabajo"
 
 
 def bloque_entregables(specs: list[str]) -> str:

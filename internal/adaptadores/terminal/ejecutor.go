@@ -47,6 +47,8 @@ var scriptsPython = map[string]string{
 	"datos":     "afirmaciones.py",
 	"bib":       "bibliografia.py",
 	"producir":  "../producir.py",
+	"redactar":  "../redaccion/cli.py",
+	"pdf":       "../exportar_pdf.py",
 	"verificar": "verificar.py",
 }
 

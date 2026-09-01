@@ -75,6 +75,15 @@ def extraer(carpeta: Path) -> int:
             continue
         texto = (extraer_pdf(doc) if doc.suffix.lower() == ".pdf"
                  else doc.read_text(encoding="utf-8", errors="replace"))
+        # fuera el texto de servicio de la revista: si entra en el índice, el
+        # modelo lo recupera como si fuera contenido (caso real: acabó citando
+        # al editor de la revista como si fuera un autor)
+        try:
+            sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+            from dockit.redaccion import limpieza
+            texto = limpieza.limpiar(texto)
+        except ImportError:
+            pass
         if texto.strip():
             salida.write_text(texto, encoding="utf-8")
             print(f"  {doc.name} -> textos/{salida.name} "
