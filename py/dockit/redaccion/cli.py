@@ -151,8 +151,11 @@ def main() -> int:
           f"una por sección del índice")
     print(f"afirmaciones.json: {len(afirmaciones)} afirmaciones que verificar")
     if descartadas_total:
-        print(f"{len(set(descartadas_total))} clave(s) inventadas por el modelo, "
-              f"descartadas: {', '.join(sorted(set(descartadas_total))[:4])}")
+        # se cuentan por identidad, no por grafía: Egberts2017 y egberts2017
+        # son la misma clave inventada escrita de dos maneras
+        unicas = sorted({c.lower() for c in descartadas_total})
+        print(f"{len(unicas)} clave(s) inventadas por el modelo, "
+              f"descartadas: {', '.join(unicas[:4])}")
     print("\nsiguiente: sisifo datos   (comprueba que cada dato tenga respaldo)")
     return 0
 
