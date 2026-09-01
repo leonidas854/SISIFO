@@ -83,20 +83,25 @@ con la bibliografía.
 Nunca ablandes el umbral ni borres la afirmación del JSON para que pase. El punto
 del verificador es que no se pueda hacer trampa cómodamente.
 
-## Ahorro de tokens
+## Ahorro de tokens: el índice
 
-El cuello de botella es leer papers enteros. No lo hagas:
-
-1. `buscar.py` ya trae el **resumen** de cada trabajo — con eso decides qué vale.
-2. Para los que valen, extrae el texto y **recupera solo los pasajes** relevantes
-   con `bge-m3` por ollama, en vez de leer el PDF completo:
+El cuello de botella es leer papers enteros. **No los leas.**
 
 ```bash
-ollama run bge-m3 </dev/null >/dev/null 2>&1   # calienta el modelo
-# indexar y recuperar: embeddings locales, coste cero en tokens
+taller indexar                                   # una vez, tras extraer
+taller consultar "¿qué dice la literatura sobre X?" 5
 ```
 
-3. Lee tú únicamente los pasajes devueltos. De ahí salen las citas literales.
+`taller indexar` trocea las fuentes y las embebe con `bge-m3` en local, coste
+cero en tokens. `taller consultar` devuelve los pasajes más cercanos a tu
+pregunta, con su fuente y su cercanía.
+
+**Es multilingüe**: puedes preguntar en español sobre fuentes en inglés y las
+encuentra igual. Úsalo siempre antes de abrir un PDF: lee los fragmentos, y solo
+si se quedan cortos vas al documento completo.
+
+De esos fragmentos salen las citas literales para `afirmaciones.json` — están
+copiados del texto real, que es exactamente lo que el verificador exige.
 
 `llama3.2` local sirve para tareas en lote sin criterio fino: clasificar si un
 resumen es pertinente, agrupar por tema, detectar duplicados. No lo uses para

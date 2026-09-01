@@ -10,14 +10,30 @@ No pisa nada: si la carpeta ya existe con BRIEF.md, se planta.
 from __future__ import annotations
 
 import argparse
+import os
 import re
 import shutil
 import sys
 from datetime import date
 from pathlib import Path
 
-RAIZ = Path(__file__).resolve().parents[2]
-PLANTILLA = RAIZ / "_taller" / "plantillas" / "BRIEF.md"
+def _buscar_plantilla() -> Path:
+    """Sube desde este archivo hasta encontrar plantillas/BRIEF.md.
+
+    Así el script sigue funcionando aunque el paquete se mueva de sitio, que es
+    justo lo que pasó al centralizar el código."""
+    if v := os.environ.get("TALLER_HOME"):
+        c = Path(v) / "plantillas" / "BRIEF.md"
+        if c.exists():
+            return c
+    for padre in Path(__file__).resolve().parents:
+        c = padre / "plantillas" / "BRIEF.md"
+        if c.exists():
+            return c
+    return Path(__file__).resolve().parents[3] / "plantillas" / "BRIEF.md"
+
+
+PLANTILLA = _buscar_plantilla()
 SUBDIRS = ("fuentes", "salida", "trabajo")
 
 
@@ -55,11 +71,13 @@ def main() -> int:
     p.add_argument("--entrega", help="AAAA-MM-DD")
     p.add_argument("--entregable", action="append", default=[],
                    help="ruta[:tipo[:minimo]], repetible")
-    p.add_argument("--raiz", type=Path, default=RAIZ)
+    p.add_argument("--raiz", type=Path, default=None,
+                   help="dónde crear la carpeta (por defecto, donde estés)")
     args = p.parse_args()
 
+    raiz = (args.raiz or Path.cwd()).resolve()
     slug = slugificar(args.slug)
-    destino = args.raiz / slug
+    destino = raiz / slug
     brief = destino / "BRIEF.md"
 
     if brief.exists():
@@ -92,7 +110,7 @@ def main() -> int:
     brief.write_text(texto, encoding="utf-8")
     (destino / "fuentes" / ".gitkeep").touch()
 
-    print(f"creado {destino.relative_to(args.raiz)}/")
+    print(f"creado {destino.relative_to(raiz)}/")
     for sub in SUBDIRS:
         print(f"  {sub}/")
     print(f"  BRIEF.md   <- llénalo antes de pedir nada")

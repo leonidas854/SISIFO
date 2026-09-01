@@ -5,3 +5,9 @@ node_modules/
 bin/
 trabajos.json
 *.gob
+
+# datos de trabajos concretos: viven en la carpeta del trabajo, no en el motor
+plan_full.json
+*.docx
+*.pptx
+fonts/
