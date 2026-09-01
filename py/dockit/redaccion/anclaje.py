@@ -14,7 +14,9 @@ from __future__ import annotations
 import re
 import unicodedata
 
-RE_CLAVE = re.compile(r"\(?\b([a-z][a-z0-9]*\d{4}[a-z0-9]*)\b\)?")
+# Cada modelo cita a su manera: llama3.2 usa paréntesis, qwen2.5 corchetes, y
+# a veces ponen la clave en mayúscula. Todas cuentan como cita.
+RE_CLAVE = re.compile(r"[\(\[]?\b([A-Za-z][A-Za-z0-9]*\d{4}[A-Za-z0-9]*)\b[\)\]]?")
 RE_FRASE = re.compile(r"[^.!?]+[.!?]")
 RE_DATO = re.compile(r"\d")
 MIN_SOLAPE = 0.18          # por debajo, el pasaje no respalda la frase
@@ -30,11 +32,13 @@ def filtrar_citas(texto: str, verificadas: set[str]) -> tuple[str, list[str]]:
     """Quita del texto toda clave que no esté verificada."""
     descartadas: list[str] = []
 
+    indice = {c.lower(): c for c in verificadas}
+
     def sustituir(m: re.Match) -> str:
-        clave = m.group(1)
-        if clave in verificadas:
+        clave = indice.get(m.group(1).lower())
+        if clave:
             return m.group(0)
-        descartadas.append(clave)
+        descartadas.append(m.group(1))
         return ""
 
     limpio = RE_CLAVE.sub(sustituir, texto)
@@ -53,10 +57,11 @@ def normalizar_citas(texto: str, verificadas: set[str]) -> tuple[str, list[str]]
     confundiría con un dato que necesita respaldo.
     """
     citadas: list[str] = []
+    indice = {c.lower(): c for c in verificadas}
 
     def sustituir(m: re.Match) -> str:
-        clave = m.group(1)
-        if clave not in verificadas:
+        clave = indice.get(m.group(1).lower())
+        if clave is None:
             return m.group(0)
         if clave not in citadas:
             citadas.append(clave)

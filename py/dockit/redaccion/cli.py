@@ -110,7 +110,8 @@ def main() -> int:
         # 2. fuera las claves buenas del cuerpo: la cita definitiva la pone
         #    citeproc, y así el año de la clave no se confunde con un dato
         limpio, citadas = anclaje.normalizar_citas(texto, verificadas)
-        limpio = limpieza.sin_restos_de_cita(limpio)
+        limpio = limpieza.sin_marcadores_numericos(
+            limpieza.sin_restos_de_cita(limpio))
 
         # 3. lo que quede con cifras, a verificar contra los pasajes
         nuevas = anclaje.extraer_afirmaciones(

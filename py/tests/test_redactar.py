@@ -162,3 +162,33 @@ def test_guion_de_diapositivas_sigue_el_indice():
         "las láminas siguen el índice del informe, en su orden"
     listas = [b for b in g["bloques"] if b["clase"] == "lista"]
     assert len(listas) == 2 and listas[0]["items"] == ["Idea A", "Idea B"]
+
+
+# ── cada modelo cita a su manera ────────────────────────────────────────
+
+@pytest.mark.parametrize("forma", [
+    "(caldarelli2020understanding)",
+    "[caldarelli2020understanding]",          # qwen2.5 usa corchetes
+    "[Caldarelli2020understanding]",          # y a veces con mayúscula
+    "según caldarelli2020understanding",
+    "Caldarelli2020understanding",
+])
+def test_reconoce_las_formas_de_citar_de_cada_modelo(forma):
+    """Bug real: qwen escribía «[Poblet2020from]» y no se reconocía, así que
+    la clave quedaba en el texto y su año se tomaba por un dato sin respaldo."""
+    texto = f"El oráculo media el acceso {forma} y eso importa."
+    limpio, claves = anclaje.normalizar_citas(texto, VERIFICADAS)
+    assert "caldarelli2020understanding" in claves, f"no reconoce {forma}"
+    assert "2020understanding" not in limpio, f"queda residuo con {forma}"
+
+
+def test_la_clave_entre_corchetes_no_cuenta_como_dato():
+    assert anclaje.extraer_afirmaciones(
+        "[Poblet2020from] introduce la idea de oráculos independientes.",
+        PASAJES, VERIFICADAS) == []
+
+
+def test_no_se_lleva_por_delante_una_referencia_no_verificada():
+    limpio, claves = anclaje.normalizar_citas(
+        "Algo dice [inventada2020fake].", VERIFICADAS)
+    assert claves == []

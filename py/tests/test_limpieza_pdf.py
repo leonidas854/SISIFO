@@ -70,3 +70,43 @@ def test_reconoce_el_pie_partido_por_el_maquetado():
     limpio = limpieza.limpiar(sucio)
     assert "Giovanni Merlino" not in limpio
     assert "oracles" in limpio
+
+
+@pytest.mark.parametrize("sucio,limpio", [
+    ("La literatura actual, como, destaca que el interés crece.",
+     "La literatura actual destaca que el interés crece."),
+    ("Autores como y señalan el riesgo.", "Autores señalan el riesgo."),
+    ("Según, el oráculo media.", "El oráculo media."),
+    ("El trabajo de muestra la tendencia.", "El trabajo muestra la tendencia."),
+])
+def test_no_deja_conectores_colgando(sucio, limpio):
+    """Al retirar la clave quedaba «como,» o «Según,» sin nada detrás."""
+    assert limpieza.sin_restos_de_cita(sucio) == limpio
+
+
+def test_no_toca_una_frase_sana():
+    sana = "Los oráculos, como los de precios, requieren confianza."
+    assert limpieza.sin_restos_de_cita(sana) == sana
+
+
+@pytest.mark.parametrize("sucio,limpio", [
+    ("La fiabilidad de estas fuentes, 10-13).",
+     "La fiabilidad de estas fuentes."),
+    ("Los oráculos [7]-[9] median el acceso.", "Los oráculos median el acceso."),
+    ("Se describe en [4] el mecanismo.", "Se describe el mecanismo."),
+    ("Varios trabajos (12, 15) lo señalan.", "Varios trabajos lo señalan."),
+])
+def test_quita_los_marcadores_numericos_de_las_fuentes(sucio, limpio):
+    """Los PDF citan con «[7]–[9]»; al copiarse al borrador quedan sueltos y
+    la detección de cifras los toma por datos sin respaldo."""
+    assert limpieza.sin_marcadores_numericos(sucio) == limpio
+
+
+@pytest.mark.parametrize("sana", [
+    "El ataque costó 100 millones de dólares.",
+    "La norma ISO 27037 lo regula.",
+    "En 2017 ocurrió el incidente.",
+    "El 87 % de los casos falla.",
+])
+def test_no_se_lleva_cifras_que_si_son_datos(sana):
+    assert limpieza.sin_marcadores_numericos(sana) == sana
