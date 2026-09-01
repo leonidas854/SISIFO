@@ -47,6 +47,7 @@ taller consultar "¿qué dice la literatura sobre X?"
 
 taller datos                 # ¿cada afirmación tiene respaldo?
 taller bib --verificar       # bibliografía APA 7, cada DOI comprobado
+taller producir --tipo docx,pptx,xlsx   # los entregables, desde un solo guion
 taller verificar             # ¿está listo?
 
 taller estado                # todos tus trabajos, estén donde estén
@@ -96,16 +97,42 @@ skills/              las skills de Claude Code, enlazadas a nivel de usuario
 El índice no usa base de datos ni cgo: un fichero `gob` y coseno por fuerza
 bruta. Para unos miles de fragmentos es instantáneo y no tiene nada que romperse.
 
+## Un guion, tres formatos
+
+`guion.json` describe el documento una sola vez y produce el informe, las
+diapositivas y la hoja de cálculo:
+
+```json
+{"tipo": "docx", "titulo": "…", "bloques": [
+  {"clase": "titulo",  "nivel": 1, "texto": "Introducción"},
+  {"clase": "parrafo", "texto": "…", "citas": ["nath2024digital"]},
+  {"clase": "tabla",   "cabecera": [...], "filas": [[...]], "leyenda": "Tabla 1. …"},
+  {"clase": "bibliografia"}]}
+```
+
+Las citas se insertan con el texto que produce citeproc, nunca escrito a mano.
+**Citar una clave no verificada hace fallar la generación**, no produce un
+documento con una referencia dudosa dentro.
+
+## Pruebas
+
+```bash
+make test      # 12 tests de dominio en Go + 24 de generación en Python
+```
+
+Las reglas del dominio —cuándo una referencia es citable, cuándo una afirmación
+tiene respaldo, cuándo un trabajo está listo— se escribieron como tests antes
+que como código.
+
 ## Estado
 
-Funciona y está probado de punta a punta: búsqueda, descarga, extracción,
-índice, consulta multilingüe, verificación de referencias y de afirmaciones,
-bibliografía APA 7.
+Funciona de punta a punta: búsqueda, descarga, extracción, índice, consulta
+multilingüe, verificación de referencias y afirmaciones, bibliografía APA 7 y
+generación de `.docx`, `.pptx` y `.xlsx`.
 
-**Falta** la capa de producción: nada construye todavía el `.docx` final a partir
-del material verificado. Los generadores existen en `py/dockit/docx_`, `pdf_` y
-`medios`, pero atados a los trabajos para los que se escribieron; hay que
-promoverlos a API reutilizable.
+**Falta** exponer como órdenes de `taller` el canal de ilustración de
+diapositivas y el de audio/video, que están en `py/dockit/` pero todavía atados
+a los trabajos para los que se escribieron.
 
 ## Licencia
 

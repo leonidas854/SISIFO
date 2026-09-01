@@ -173,7 +173,24 @@ def revisar_fuentes(carpeta: Path, brief: dict, inf: Informe) -> None:
                f"{rel}{'' if ruta.exists() else ' — no está en la carpeta'}")
 
 
-RE_CITA = re.compile(r"\([A-ZÁÉÍÓÚÑ][\wÁÉÍÓÚÑáéíóúñ.\- ]+,\s*\d{4}[a-z]?\)")
+# Reconoce las citas en el texto tal y como las escribe citeproc:
+#   (Nath et al., 2024) · (Ćosić & Bača, 2010) · (Pérez-Gómez, 2019a)
+# Ojo con dos detalles que costaron un fallo silencioso: «et al.» lleva espacio
+# duro (U+00A0) y APA usa «&» para dos autores. Sin contemplarlos, el
+# verificador contaba cero citas en documentos que sí las tenían.
+RE_CITA = re.compile(
+    r"\("
+    r"[A-ZÁÉÍÓÚÑÀÈÌÒÙÄËÏÖÜÑĆČŠŽ]"      # el apellido empieza en mayúscula
+    r"[^()]{1,80}?"                     # autores, sin paréntesis anidados
+    r",\s*"
+    r"(?:\d{4}[a-z]?|s\.\s*f\.)"        # año, o «s. f.» si no lo tiene
+    r"\)"
+)
+
+
+def normalizar_espacios(s: str) -> str:
+    """Sustituye los espacios duros que mete citeproc por espacios normales."""
+    return (s or "").replace("\u00a0", " ").replace("\u202f", " ")
 RE_BIBLIO = re.compile(r"^\s*(bibliograf|referencias|fuentes consultadas)",
                        re.I | re.M)
 
@@ -183,8 +200,9 @@ def revisar_citas(texto: str, brief: dict, inf: Informe) -> None:
     if modo == "no" or not texto:
         return
     inf.titulo("Citas")
-    citas = RE_CITA.findall(texto)
-    tiene_biblio = bool(RE_BIBLIO.search(texto))
+    plano = normalizar_espacios(texto)
+    citas = RE_CITA.findall(plano)
+    tiene_biblio = bool(RE_BIBLIO.search(plano))
     estado = OK if citas else (MAL if modo == "obligatorias" else DUDA)
     inf.di(estado, f"{len(citas)} citas con formato (Autor, año)")
     inf.di(OK if tiene_biblio else (MAL if modo == "obligatorias" else DUDA),

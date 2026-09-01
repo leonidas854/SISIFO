@@ -116,8 +116,9 @@ def verificar(entradas: list[dict]) -> list[tuple[dict, str, str]]:
 
 # ── formato APA 7 ─────────────────────────────────────────────────────────
 
-def formatear(entradas: list[dict], locale: str) -> tuple[list[str], dict[str, str]]:
-    """Devuelve (lista de referencias, {clave: cita en el texto})."""
+def formatear(entradas: list[dict], locale: str
+              ) -> tuple[list[str], dict[str, str], dict[str, str]]:
+    """Devuelve (referencias, {clave: cita en texto}, {clave: entrada APA})."""
     limpias = [limpiar(e) for e in entradas if e.get("id")]
     fuente = CiteProcJSON(limpias)
     estilo = CitationStylesStyle(get_style_filepath("apa"), locale=locale,
@@ -127,10 +128,13 @@ def formatear(entradas: list[dict], locale: str) -> tuple[list[str], dict[str, s
     for c in citas.values():
         bib.register(c)
     referencias = [str(x) for x in bib.bibliography()]
+    # el mapa clave -> entrada, para que quien produzca el documento no tenga
+    # que adivinar qué entrada corresponde a qué cita
+    por_clave = dict(zip(fuente, referencias))
     # la cita en el texto tiene que salir del mismo motor que la referencia,
     # o el "et al." y el orden de autores se desincronizan
     en_texto = {k: str(bib.cite(c, lambda _: None)) for k, c in citas.items()}
-    return referencias, en_texto
+    return referencias, en_texto, por_clave
 
 
 def main() -> int:
@@ -165,7 +169,7 @@ def main() -> int:
         # las no verificables no se tiran: se marcan y se separan
         usables = [e for e in entradas if e.get("id") not in malas]
 
-    lineas, en_texto = formatear(usables, args.locale)
+    lineas, en_texto, por_clave = formatear(usables, args.locale)
     destino = args.carpeta / args.salida
     destino.parent.mkdir(parents=True, exist_ok=True)
     destino.write_text(
@@ -176,6 +180,9 @@ def main() -> int:
     mapa = args.carpeta / "fuentes" / "citas_en_texto.json"
     mapa.write_text(json.dumps(en_texto, ensure_ascii=False, indent=2),
                     encoding="utf-8")
+
+    (args.carpeta / "fuentes" / "referencias_apa.json").write_text(
+        json.dumps(por_clave, ensure_ascii=False, indent=2), encoding="utf-8")
 
     print(f"\n{destino.relative_to(args.carpeta)}: {len(lineas)} referencias en APA 7")
     print(f"{mapa.relative_to(args.carpeta)}: cómo citar cada una dentro del texto")

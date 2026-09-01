@@ -25,6 +25,7 @@ const ayuda = `taller — trabajos académicos e investigación verificable
   taller consultar "pregunta"          recupera los pasajes que responden
   taller datos                         ¿cada afirmación tiene respaldo?
   taller bib [--verificar]             bibliografía APA 7 comprobada
+  taller producir [--tipo docx,pptx]   genera los entregables desde guion.json
   taller verificar                     ¿está listo?
   taller estado                        todos tus trabajos, estén donde estén
   taller doctor                        revisa el entorno
@@ -39,6 +40,7 @@ var enPython = map[string]string{
 	"extraer":   "afirmaciones.py",
 	"datos":     "afirmaciones.py",
 	"bib":       "bibliografia.py",
+	"producir":  "../producir.py",
 	"verificar": "verificar.py",
 }
 
