@@ -42,6 +42,7 @@ function palette(format) {
 // La escala se fija una vez en generate() y la usan todas las láminas, para no
 // tener que pasar el formato por cada firma.
 let ESCALA_TEXTO = 1;
+let TITULO_TRABAJO = '';
 
 function bodySize(base) {
   return Math.max(20, Math.round(base * ESCALA_TEXTO));
@@ -101,6 +102,15 @@ function sentenceChunks(text, limit = 190) {
   return chunks;
 }
 
+// Pie con el título: quien entra a media exposición sabe de qué va.
+function addPie(slide, titulo, font, colors) {
+  if (!titulo) return;
+  slide.addText(String(titulo), {
+    x: 0.8, y: H - 0.52, w: W - 2.4, h: 0.3,
+    fontFace: font, fontSize: 10, color: colors.muted, margin: 0,
+  });
+}
+
 function addSlideNumber(slide, number, font, colors) {
   slide.addText(String(number).padStart(2, '0'), {
     x: 12.28, y: 7.02, w: 0.48, h: 0.2,
@@ -142,6 +152,7 @@ function addNotes(slide, title, fullText) {
 
 function addCover(pptx, input, colors, font) {
   const slide = pptx.addSlide();
+  const p = input.guion.portada || {};
   slide.background = { color: colors.ink };
   slide.addShape('ellipse', {
     x: 8.9, y: -1.15, w: 5.5, h: 5.5,
@@ -153,28 +164,138 @@ function addCover(pptx, input, colors, font) {
     fill: { color: colors.accent, transparency: 5 },
     line: { color: colors.accent, transparency: 100 },
   });
-  slide.addText(input.guion.titulo, {
-    x: 0.88, y: 1.35, w: 8.5, h: 2.2,
-    fontFace: font, fontSize: 44, bold: true,
-    color: colors.paper, margin: 0, valign: 'mid', fit: 'shrink',
-  });
-  if (input.guion.autor) {
-    slide.addText(input.guion.autor, {
-      x: 0.92, y: 4.05, w: 7.3, h: 0.45,
-      fontFace: font, fontSize: 18, color: colors.soft, margin: 0,
+
+  // Datos académicos arriba: quien entra a la sala sabe de qué defensa es
+  const encabezado = [p.institucion, p.carrera].filter(Boolean).join('  ·  ');
+  if (encabezado) {
+    slide.addText(encabezado.toUpperCase(), {
+      x: 0.88, y: 0.62, w: 8.5, h: 0.32,
+      fontFace: font, fontSize: 12, bold: true,
+      color: colors.accent, margin: 0, charSpacing: 1.4,
     });
   }
-  slide.addText('SÍSIFO · contenido verificable', {
-    x: 0.92, y: 6.55, w: 4.2, h: 0.25,
-    fontFace: font, fontSize: 10, bold: true,
-    color: colors.accent, margin: 0, charSpacing: 1.1,
+
+  slide.addText(input.guion.titulo, {
+    x: 0.88, y: encabezado ? 1.5 : 1.35, w: 8.5, h: 2.1,
+    fontFace: font, fontSize: 40, bold: true,
+    color: colors.paper, margin: 0, valign: 'mid', fit: 'shrink',
   });
-  addNotes(slide, input.guion.titulo, [input.guion.autor || '']);
+
+  if (p.materia) {
+    slide.addText(p.materia, {
+      x: 0.9, y: 3.72, w: 8.0, h: 0.4,
+      fontFace: font, fontSize: 17, italic: true,
+      color: colors.soft, margin: 0,
+    });
+  }
+
+  // Bloque de créditos, con la etiqueta en pequeño sobre cada dato
+  const creditos = [
+    ['Presentado por', p.autor || input.guion.autor],
+    ['Docente', p.docente],
+  ].filter(([, v]) => v);
+  creditos.forEach(([etiqueta, valor], i) => {
+    const y = 4.5 + i * 0.78;
+    slide.addText(etiqueta.toUpperCase(), {
+      // sobre el fondo oscuro de la portada, `muted` no se lee
+      x: 0.92, y, w: 4.0, h: 0.24, fontFace: font, fontSize: 10,
+      color: colors.accent, margin: 0, charSpacing: 1.2,
+    });
+    slide.addText(String(valor), {
+      x: 0.92, y: y + 0.26, w: 5.4, h: 0.4,
+      fontFace: font, fontSize: 16, color: colors.paper, margin: 0,
+    });
+  });
+
+  const pie = [p.lugar, p.fecha].filter(Boolean).join('  ·  ');
+  if (pie) {
+    slide.addText(pie, {
+      x: 0.92, y: 6.5, w: 7.0, h: 0.3,
+      fontFace: font, fontSize: 12, color: colors.soft, margin: 0,
+    });
+  }
+  addNotes(slide, input.guion.titulo, [p.institucion || '', p.autor || '']);
   return slide;
 }
 
-// Viñetas a la izquierda, diagrama a la derecha. El diagrama sale de esas
-// mismas viñetas, así que verlos juntos es lo que da sentido a la lámina.
+// Agenda: el público necesita la estructura antes de que empiece el fondo.
+function addAgenda(pptx, secciones, colors, font, number) {
+  if (secciones.length < 2) return number;
+  const slide = pptx.addSlide();
+  slide.background = { color: colors.paper };
+  addTitle(slide, 'Contenido', font, colors, false);
+  const columnas = secciones.length > 6 ? 2 : 1;
+  const porColumna = Math.ceil(secciones.length / columnas);
+  secciones.forEach((titulo, i) => {
+    const col = Math.floor(i / porColumna);
+    const fila = i % porColumna;
+    const x = 0.95 + col * 6.3;
+    const y = 1.7 + fila * 0.74;
+    slide.addText(String(i + 1).padStart(2, '0'), {
+      x, y, w: 0.7, h: 0.5, fontFace: font, fontSize: bodySize(22),
+      bold: true, color: colors.accent, margin: 0,
+    });
+    slide.addText(titulo, {
+      x: x + 0.75, y, w: (columnas === 1 ? 10.6 : 5.2), h: 0.5,
+      fontFace: font, fontSize: bodySize(22), color: colors.ink,
+      margin: 0, fit: 'shrink',
+    });
+  });
+  addSlideNumber(slide, number, font, colors);
+  addNotes(slide, 'Contenido', secciones);
+  return number + 1;
+}
+
+// Separador entre partes: marca el cambio de tema y da respiro al público.
+function addSeparador(pptx, titulo, indice, colors, font) {
+  const slide = pptx.addSlide();
+  slide.background = { color: colors.ink };
+  slide.addShape('ellipse', {
+    x: 9.6, y: 1.4, w: 4.2, h: 4.2,
+    fill: { color: colors.primary, transparency: 12 },
+    line: { color: colors.primary, transparency: 100 },
+  });
+  slide.addText(String(indice).padStart(2, '0'), {
+    x: 1.0, y: 2.1, w: 2.0, h: 1.0, fontFace: font, fontSize: 60,
+    bold: true, color: colors.accent, margin: 0,
+  });
+  slide.addText(titulo, {
+    x: 1.0, y: 3.25, w: 8.4, h: 1.4, fontFace: font, fontSize: 36,
+    bold: true, color: colors.paper, margin: 0, valign: 'top', fit: 'shrink',
+  });
+  addNotes(slide, titulo, []);
+  return slide;
+}
+
+// Cierre: terminar en la lista de referencias deja la exposición colgando.
+function addCierre(pptx, input, colors, font) {
+  const slide = pptx.addSlide();
+  const p = input.guion.portada || {};
+  slide.background = { color: colors.ink };
+  slide.addShape('ellipse', {
+    x: -1.2, y: 3.6, w: 4.6, h: 4.6,
+    fill: { color: colors.primary, transparency: 10 },
+    line: { color: colors.primary, transparency: 100 },
+  });
+  slide.addText('Gracias', {
+    x: 1.0, y: 2.5, w: 11.0, h: 1.2, fontFace: font, fontSize: 54,
+    bold: true, color: colors.paper, margin: 0, align: 'center',
+  });
+  slide.addText('¿Preguntas?', {
+    x: 1.0, y: 3.8, w: 11.0, h: 0.7, fontFace: font, fontSize: 24,
+    color: colors.accent, margin: 0, align: 'center',
+  });
+  const firma = [p.autor || input.guion.autor, p.materia].filter(Boolean).join('  ·  ');
+  if (firma) {
+    slide.addText(firma, {
+      x: 1.0, y: 5.2, w: 11.0, h: 0.4, fontFace: font, fontSize: 14,
+      color: colors.soft, margin: 0, align: 'center',
+    });
+  }
+  addNotes(slide, 'Cierre', []);
+  return slide;
+}
+
 function addContentSlideConFigura(pptx, section, items, colors, font, number,
                                   continuation, variant, figura) {
   const fs = require('fs');
@@ -213,6 +334,7 @@ function addContentSlideConFigura(pptx, section, items, colors, font, number,
       });
     }
   }
+  addPie(slide, TITULO_TRABAJO, font, colors);
   addSlideNumber(slide, number, font, colors);
   addNotes(slide, section, items.map((i) => i.full || i.text));
   return slide;
@@ -285,6 +407,7 @@ function addContentSlide(pptx, section, items, colors, font, number, continuatio
       });
     });
   }
+  addPie(slide, TITULO_TRABAJO, font, colors);
   addSlideNumber(slide, number, font, colors);
   addNotes(slide, section, items.map((item) => item.full || item.text));
   return slide;
@@ -542,6 +665,7 @@ async function generate(input) {
   pptx.layout = 'SISIFO_WIDE';
 
   ESCALA_TEXTO = Number((input.formato || {}).escala_texto) || 1;
+  TITULO_TRABAJO = input.guion.titulo || '';
   const colors = palette(input.formato || {});
   const font = safeFont(input.formato || {});
   addCover(pptx, input, colors, font);
@@ -549,8 +673,18 @@ async function generate(input) {
   let referencesAdded = false;
   const events = sectionsFromGuion(input.guion, input.en_texto || {});
   let variant = 0;
+
+  const secciones = events.filter((e) => e.kind === 'content').map((e) => e.title);
+  number = addAgenda(pptx, secciones, colors, font, number);
+  // con muchas secciones, un separador cada tres da respiro sin alargar
+  const cadaCuantas = secciones.length >= 6 ? 3 : 0;
+  let nSeccion = 0;
   for (const event of events) {
     if (event.kind === 'content') {
+      nSeccion += 1;
+      if (cadaCuantas && nSeccion > 1 && (nSeccion - 1) % cadaCuantas === 0) {
+        addSeparador(pptx, event.title, nSeccion, colors, font);
+      }
       const sourceItems = event.items.length ? event.items : [{
         text: 'Esta sección organiza la idea principal de la exposición.',
         full: event.title,
@@ -578,6 +712,7 @@ async function generate(input) {
   if (!referencesAdded && Object.keys(input.bibliografia || {}).length) {
     number = addReferences(pptx, input.bibliografia || {}, colors, font, number);
   }
+  addCierre(pptx, input, colors, font);
   await pptx.writeFile({ fileName: input.destino });
   return { ruta: input.destino, unidades: pptx._slides.length };
 }

@@ -47,18 +47,23 @@ def tamanos(pres):
     return out
 
 
-# lo que NO es cuerpo: numeración, pie de marca y créditos de la portada
-CHROME = ("SÍSIFO", "SISIFO", "Autor")
+# Lo que NO es cuerpo: numeración, créditos de portada y el pie que repite el
+# título del trabajo en cada lámina. El pie va pequeño a propósito: es una
+# referencia de ubicación, no algo que nadie deba leer desde el fondo.
+CHROME = ("Autor",)
 
 
-def es_cuerpo(texto: str) -> bool:
+def es_cuerpo(texto: str, titulo_trabajo: str = "") -> bool:
     if texto.isdigit() or len(texto) <= 18:
+        return False
+    if titulo_trabajo and texto.strip() == titulo_trabajo:
         return False
     return not any(texto.startswith(c) for c in CHROME)
 
 
 def test_el_cuerpo_se_lee_desde_el_fondo(pres):
-    cuerpo = [(t, x) for t, x in tamanos(pres) if es_cuerpo(x)]
+    cuerpo = [(t, x) for t, x in tamanos(pres)
+              if es_cuerpo(x, GUION["titulo"])]
     assert cuerpo, "no encuentro texto de cuerpo"
     pequenos = [(t, x[:40]) for t, x in cuerpo if t < CUERPO_MIN]
     assert not pequenos, f"texto por debajo de {CUERPO_MIN} pt: {pequenos[:3]}"

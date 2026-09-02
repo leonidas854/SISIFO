@@ -7,6 +7,17 @@ docente: null
 entrega: null          # AAAA-MM-DD
 idioma: es
 
+# ─── Portada ──────────────────────────────────────────────────────────────
+# Lo que lleva la carátula del informe y la primera diapositiva. Se rellena
+# una vez y aparece en todos los entregables.
+portada:
+  institucion: null
+  carrera: null
+  docente: null          # se hereda de `docente:` si aquí no se pone
+  autor: null
+  lugar: null
+  fecha: null            # texto libre: "septiembre de 2026"
+
 # ─── Qué se entrega ───────────────────────────────────────────────────────
 # Cada archivo que debe existir al final. verificar.py los comprueba uno a uno.
 entregables:

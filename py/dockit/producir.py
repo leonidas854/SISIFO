@@ -134,9 +134,18 @@ def main() -> int:
     # el .pptx tiene su propio guion condensado, si el redactor lo dejó
     diapos = cargar_json(carpeta / "guion_diapos.json", None)
 
+    # los datos de portada salen del BRIEF, no se escriben en cada guion
+    portada = dict(brief.get("portada") or {})
+    portada.setdefault("materia", brief.get("materia"))
+    portada.setdefault("docente", brief.get("docente"))
+    portada = {k: v for k, v in portada.items() if v}
+
     for tipo in tipos:
         base_guion = diapos if (tipo == "pptx" and diapos) else guion
         g = dict(base_guion, tipo=tipo)
+        if portada:
+            g["portada"] = portada
+            g.setdefault("autor", portada.get("autor", ""))
         destino = carpeta / destino_declarado(brief, tipo, base)
         try:
             r = generar_desde_guion(g, str(destino), bibliografia, en_texto,
