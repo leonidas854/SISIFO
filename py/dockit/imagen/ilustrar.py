@@ -86,7 +86,8 @@ def arquetipo_para(vinetas: list[str]) -> str:
 
 
 def spec_para(titulo: str, vinetas: list[str],
-              con_titulo: bool = True) -> dict | None:
+              con_titulo: bool = True,
+              paleta: dict | None = None) -> dict | None:
     """Especificación del diagrama de una lámina, o None si no hay qué dibujar."""
     limpias = [v.strip() for v in (vinetas or []) if v and v.strip()]
     if not limpias:
@@ -98,6 +99,8 @@ def spec_para(titulo: str, vinetas: list[str],
             # la lámina ya lleva el título arriba: repetirlo compite con él
             "titulo": titulo.strip() if con_titulo else "",
             "acento": [0]}
+    if paleta:
+        spec["paleta"] = paleta
 
     # «contraste» enfrenta dos bloques y pide otra forma de spec
     if tipo == "contraste":
@@ -109,9 +112,9 @@ def spec_para(titulo: str, vinetas: list[str],
 
 
 def ilustrar_lamina(titulo: str, vinetas: list[str], destino_dir: Path,
-                    nombre: str) -> Path | None:
+                    nombre: str, paleta: dict | None = None) -> Path | None:
     """Dibuja el diagrama de una lámina y devuelve la ruta del PNG."""
-    spec = spec_para(titulo, vinetas, con_titulo=False)
+    spec = spec_para(titulo, vinetas, con_titulo=False, paleta=paleta)
     if spec is None:
         return None
     destino_dir = Path(destino_dir)

@@ -29,8 +29,42 @@ RAIZ = Path(__file__).resolve().parent.parent
 # carpeta del proyecto original, que dejó de existir al centralizar el código.
 CANONICO = Path(__file__).resolve().parent.parent / "pptx_" / "vector.py"
 
+# Paleta por defecto: la de la plantilla del proyecto policial, que es de
+# donde vienen estos arquetipos. Cualquier trabajo puede imponer la suya con
+# spec["paleta"], y debe hacerlo: un diagrama con colores ajenos a la
+# diapositiva parece pegado de otra presentación.
 OLIVA, VERDE, GRIS, ORO = "#455119", "#5E672C", "#838858", "#C9A538"
 FONDO, PAPEL, TENUE = "#F4F2EA", "#EDEADE", "#B9BCA4"
+
+_ACTIVA: dict[str, str] = {}
+
+
+def _c(valor: str) -> str:
+    """Normaliza un color a #RRGGBB."""
+    v = str(valor).strip().lstrip("#")
+    return f"#{v.upper()}" if len(v) == 6 else valor
+
+
+def aplicar_paleta(paleta: dict | None) -> None:
+    """Fija la paleta de este dibujo. Sin argumento, vuelve a la de siempre.
+
+    Se mapea desde los nombres que usa la lámina (primary/accent/ink/soft) a
+    los papeles del diagrama, para que no haya que traducir en cada llamada.
+    """
+    global OLIVA, VERDE, GRIS, ORO, FONDO, PAPEL, TENUE, _ACTIVA
+    if not paleta:
+        OLIVA, VERDE, GRIS, ORO = "#455119", "#5E672C", "#838858", "#C9A538"
+        FONDO, PAPEL, TENUE = "#F4F2EA", "#EDEADE", "#B9BCA4"
+        _ACTIVA = {}
+        return
+    OLIVA = _c(paleta.get("primary", "#455119"))
+    ORO = _c(paleta.get("accent", "#C9A538"))
+    VERDE = _c(paleta.get("ink", OLIVA))
+    GRIS = _c(paleta.get("muted", "#838858"))
+    FONDO = _c(paleta.get("pale", paleta.get("paper", "#FFFFFF")))
+    PAPEL = _c(paleta.get("soft", FONDO))
+    TENUE = _c(paleta.get("muted", "#B9BCA4"))
+    _ACTIVA = dict(paleta)
 
 
 def _cargar_iconos() -> dict:
@@ -476,6 +510,7 @@ def construir(spec: dict, w: int = 1600, h: int = 1200) -> str:
     if tipo not in ARQUETIPOS:
         raise KeyError(f"arquetipo desconocido: {tipo}. Disponibles: {sorted(ARQUETIPOS)}")
 
+    aplicar_paleta(spec.get("paleta"))
     cuerpo = ARQUETIPOS[tipo](spec, w, h)
     cuerpo += _titulo(spec, w)
 
@@ -485,7 +520,9 @@ def construir(spec: dict, w: int = 1600, h: int = 1200) -> str:
         cuerpo += _banda_rotulos(spec, w, h,
                                  [w / n * (i + 0.5) for i in range(n)],
                                  h - ROTULO_PX * 1.6)
-    return _marco(w, h, cuerpo)
+    svg = _marco(w, h, cuerpo)
+    aplicar_paleta(None)      # no dejar la paleta fijada para el siguiente
+    return svg
 
 
 def escribir(spec: dict, destino: Path, w: int = 1600, h: int = 1200) -> Path:

@@ -21,7 +21,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from dockit.imagen import ilustrar  # noqa: E402
+from dockit.imagen import escena, ilustrar  # noqa: E402
 from dockit.redaccion import anclaje, limpieza, ollama, plan  # noqa: E402
 
 
@@ -32,6 +32,29 @@ def cargar(p: Path, defecto):
         return json.loads(p.read_text(encoding="utf-8"))
     except json.JSONDecodeError:
         return defecto
+
+
+def formato_lamina(carpeta: Path) -> dict:
+    """Paleta de la lámina, para que la imagen no desentone con ella."""
+    porDefecto = {"primary": "0B6B61", "accent": "F3B33D", "ink": "182126",
+                  "soft": "DCEDE9", "paper": "FFFFFF", "muted": "5B6970",
+                  "pale": "F5F8F8"}
+    brief = carpeta / "BRIEF.md"
+    if not brief.exists():
+        return porDefecto
+    try:
+        import re as _re
+
+        import yaml
+        m = _re.match(r"^---\n(.*?)\n---\n", brief.read_text(encoding="utf-8"), _re.S)
+        paleta = ((yaml.safe_load(m.group(1)) or {}).get("formato") or {}).get("paleta")
+        if isinstance(paleta, list) and len(paleta) >= 3:
+            porDefecto.update({"ink": str(paleta[0]).lstrip("#"),
+                               "primary": str(paleta[1]).lstrip("#"),
+                               "accent": str(paleta[2]).lstrip("#")})
+    except Exception:
+        pass
+    return porDefecto
 
 
 def consultar_indice(carpeta: Path, pregunta: str, n: int) -> list[dict]:
@@ -63,6 +86,10 @@ def main() -> int:
     p.add_argument("--titulo", default="")
     p.add_argument("--vinetas", type=int, default=5,
                    help="viñetas por diapositiva (más de cinco no se leen)")
+    p.add_argument("--imagenes", default="escena",
+                   choices=["escena", "esquema", "ninguna"],
+                   help="escena: foto realista con SDXL local · "
+                        "esquema: diagrama de iconos · ninguna")
     args = p.parse_args()
 
     carpeta = args.carpeta.resolve()
@@ -129,12 +156,8 @@ def main() -> int:
                            modelo=args.modelo, maximo=260),
             maximo=args.vinetas)
         if vinetas:
-            # el diagrama sale de estas viñetas: no puede hablar de otra cosa
-            imagen = ilustrar.ilustrar_lamina(
-                sec["titulo"], vinetas, carpeta / "trabajo" / "figuras", f"s{i}")
-            para_diapos.append({
-                "titulo": sec["titulo"], "vinetas": vinetas,
-                "imagen": str(imagen) if imagen else None})
+            para_diapos.append({"titulo": sec["titulo"], "vinetas": vinetas,
+                                "n": i})
         print(f"  [{i}/{len(secciones)}] {sec['titulo']}: "
               f"{len(limpio.split())} palabras · {len(citadas)} citas · "
               f"{len(nuevas)} afirmaciones")
@@ -147,6 +170,46 @@ def main() -> int:
         json.dumps(guion, ensure_ascii=False, indent=2), encoding="utf-8")
     (carpeta / "afirmaciones.json").write_text(
         json.dumps(afirmaciones, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    # ── imágenes de las láminas ──────────────────────────────────────────
+    figuras = carpeta / "trabajo" / "figuras"
+    paleta = (formato_lamina(carpeta) or {})
+
+    if args.imagenes == "esquema":
+        for sec in para_diapos:
+            ruta = ilustrar.ilustrar_lamina(sec["titulo"], sec["vinetas"],
+                                            figuras, f"s{sec['n']}", paleta)
+            sec["imagen"] = str(ruta) if ruta else None
+
+    elif args.imagenes == "escena":
+        if escena.disponible():
+            # una sola carga del modelo para todas: cargar SDXL cuesta más
+            # que generar, y hacerlo ocho veces multiplica el tiempo sin ganar
+            figuras.mkdir(parents=True, exist_ok=True)
+            tareas, indice = [], []
+            usadas: set[str] = set()      # ninguna escena se repite en el deck
+            for k, sec in enumerate(para_diapos):
+                tarea = escena.tarea(sec["titulo"], sec["vinetas"], paleta,
+                                     str(figuras / f"s{sec['n']}.png"),
+                                     indice=k, usadas=usadas)
+                if not tarea:
+                    continue
+                tareas.append(tarea)
+                indice.append(sec)
+            print(f"\ngenerando {len(tareas)} escenas con SDXL en local...")
+            # el modelo de texto ya no hace falta y ocupa la mitad de la VRAM
+            hechas = escena.generar_lote(
+                tareas, liberar=[args.modelo, "bge-m3"])
+            logradas = {str(h) for h in hechas}
+            for sec, tarea in zip(indice, tareas):
+                sec["imagen"] = (tarea["destino"]
+                                 if tarea["destino"] in logradas else None)
+        else:
+            print("\naviso: SDXL no está disponible; uso esquemas de iconos")
+            for sec in para_diapos:
+                ruta = ilustrar.ilustrar_lamina(sec["titulo"], sec["vinetas"],
+                                                figuras, f"s{sec['n']}", paleta)
+                sec["imagen"] = str(ruta) if ruta else None
 
     diapos = plan.guion_diapositivas(titulo, para_diapos)
     (carpeta / "guion_diapos.json").write_text(
